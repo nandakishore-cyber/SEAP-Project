@@ -1,0 +1,19 @@
+# H2 database files
+*.mv.db
+*.trace.db
+*.lock.db
+
+# Build files
+target/
+*.class
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+
+# Environment files
+.env
+
+# Logs
+*.log

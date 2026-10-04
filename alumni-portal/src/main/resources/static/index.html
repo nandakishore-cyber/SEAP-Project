@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Connect with alumni, expand your network, and manage your professional profile on the College Alumni Portal.">
+    <title>AlumniConnect | College Alumni Tracking & Networking Portal</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="background-animation">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+    </div>
+
+    <nav class="navbar">
+        <div class="container nav-container">
+            <h1 class="logo">Alumni<span>Connect</span></h1>
+        </div>
+    </nav>
+
+    <main class="container auth-container">
+        <div class="auth-card glass-panel">
+            <div class="auth-header">
+                <h2>Welcome Back</h2>
+                <p>Sign in to continue to your network</p>
+            </div>
+
+            <div class="auth-tabs">
+                <button class="tab-btn active" onclick="switchTab('login')">Login</button>
+                <button class="tab-btn" onclick="switchTab('register')">Register</button>
+            </div>
+
+            <!-- Login Form -->
+            <form id="loginForm" class="auth-form active">
+                <div class="form-group">
+                    <label for="loginEmail">Email Address</label>
+                    <input type="email" id="loginEmail" required placeholder="you@college.edu">
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password</label>
+                    <input type="password" id="loginPassword" required placeholder="••••••••">
+                </div>
+                <div id="loginError" class="error-msg"></div>
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span>Sign In</span>
+                    <div class="loader hidden"></div>
+                </button>
+            </form>
+
+            <!-- Register Form -->
+            <form id="registerForm" class="auth-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="regFirstName">First Name</label>
+                        <input type="text" id="regFirstName" required placeholder="John">
+                    </div>
+                    <div class="form-group">
+                        <label for="regLastName">Last Name</label>
+                        <input type="text" id="regLastName" required placeholder="Doe">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="regEmail">Email Address</label>
+                    <input type="email" id="regEmail" required placeholder="you@college.edu">
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">Password</label>
+                    <input type="password" id="regPassword" required placeholder="••••••••" minlength="8">
+                </div>
+                <div id="regError" class="error-msg"></div>
+                <button type="submit" class="btn btn-primary btn-block">
+                    <span>Create Account</span>
+                    <div class="loader hidden"></div>
+                </button>
+            </form>
+        </div>
+        
+        <div class="hero-text">
+            <h2>Your College Network, <span>Reimagined.</span></h2>
+            <p>Connect with peers, find mentorship, and grow your professional career within our verified alumni ecosystem.</p>
+        </div>
+    </main>
+
+    <script src="js/app.js"></script>
+</body>
+</html>
