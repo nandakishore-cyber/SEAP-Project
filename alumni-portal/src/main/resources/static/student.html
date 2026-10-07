@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Login | AlumniConnect</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body class="auth-page" data-role="ROLE_STUDENT" data-role-label="Student">
+    <div class="background-animation"><div class="blob blob-1"></div><div class="blob blob-2 blob-alt"></div></div>
+    <nav class="navbar"><div class="container nav-container">
+        <a class="logo" href="index.html">Alumni<span>Connect</span></a>
+        <a class="btn btn-outline btn-sm" href="index.html">Change account type</a>
+    </div></nav>
+    <main class="container auth-container">
+        <div class="auth-card glass-panel">
+            <div class="auth-header"><h2><span class="role-name">Student</span> portal</h2><p>Sign in or create your AlumniConnect account.</p></div>
+            <div class="auth-tabs">
+                <button class="tab-btn active" type="button" data-tab="login">Login</button>
+                <button class="tab-btn" type="button" data-tab="register">Create account</button>
+            </div>
+            <form id="loginForm" class="auth-form active">
+                <div class="form-group"><label for="loginEmail">Email Address</label><input type="email" id="loginEmail" required autocomplete="email" placeholder="you@college.edu"></div>
+                <div class="form-group"><label for="loginPassword">Password</label><input type="password" id="loginPassword" required autocomplete="current-password" placeholder="••••••••"></div>
+                <div id="loginError" class="error-msg" role="alert"></div>
+                <button type="submit" class="btn btn-primary btn-block"><span>Sign In</span><div class="loader hidden"></div></button>
+            </form>
+            <form id="registerForm" class="auth-form">
+                <div class="form-row">
+                    <div class="form-group"><label for="regFirstName">First Name</label><input type="text" id="regFirstName" required autocomplete="given-name" placeholder="John"></div>
+                    <div class="form-group"><label for="regLastName">Last Name</label><input type="text" id="regLastName" required autocomplete="family-name" placeholder="Doe"></div>
+                </div>
+                <div class="form-group"><label for="regEmail">Email Address</label><input type="email" id="regEmail" required autocomplete="email" placeholder="you@college.edu"></div>
+                <div class="form-group"><label for="regPassword">Password</label><input type="password" id="regPassword" required minlength="8" autocomplete="new-password" placeholder="••••••••"></div>
+                <div class="form-row">
+                    <div class="form-group"><label for="regStudentId">Student ID</label><input id="regStudentId" required placeholder="STU-2026-001"></div>
+                    <div class="form-group"><label for="regProgram">Program / Degree</label><input id="regProgram" required placeholder="B.Tech Computer Science"></div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group"><label for="regDepartment">Department</label><input id="regDepartment" required placeholder="Computer Science"></div>
+                    <div class="form-group"><label for="regGraduationYear">Expected Graduation Year</label><input id="regGraduationYear" type="number" min="2000" max="2100" required placeholder="2027"></div>
+                </div>
+                <div class="form-group"><label for="regInterests">Career Interests</label><textarea id="regInterests" rows="2" required placeholder="Software engineering, research..."></textarea></div>
+                <div class="form-group"><label for="regSkills">Skills You Are Building</label><input id="regSkills" required placeholder="Java, Python, communication"></div>
+                <div id="regError" class="error-msg" role="alert"></div>
+                <button type="submit" class="btn btn-primary btn-block"><span>Create Account</span><div class="loader hidden"></div></button>
+            </form>
+        </div>
+        <div class="hero-text"><h2>Learn, connect, and <span>grow together.</span></h2><p>Find mentors, discover opportunities, and stay connected with the people shaping your college community.</p></div>
+    </main>
+    <script src="js/app.js"></script>
+</body>
+</html>

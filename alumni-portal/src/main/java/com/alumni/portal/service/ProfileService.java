@@ -51,6 +51,12 @@ public class ProfileService {
                 .bio(request.getBio())
                 .profilePictureUrl(request.getProfilePictureUrl())
                 .linkedinUrl(request.getLinkedinUrl())
+                .studentId(request.getStudentId())
+                .program(request.getProgram())
+                .department(request.getDepartment())
+                .expectedGraduationYear(request.getExpectedGraduationYear())
+                .interests(request.getInterests())
+                .studentSkills(request.getStudentSkills())
                 .build();
 
         Profile savedProfile = profileRepository.save(profile);
@@ -84,6 +90,14 @@ public class ProfileService {
         if (request.getBio() != null) profile.setBio(request.getBio());
         if (request.getProfilePictureUrl() != null) profile.setProfilePictureUrl(request.getProfilePictureUrl());
         if (request.getLinkedinUrl() != null) profile.setLinkedinUrl(request.getLinkedinUrl());
+        if (request.getStudentId() != null) profile.setStudentId(request.getStudentId());
+        if (request.getProgram() != null) profile.setProgram(request.getProgram());
+        if (request.getDepartment() != null) profile.setDepartment(request.getDepartment());
+        if (request.getExpectedGraduationYear() != null) {
+            profile.setExpectedGraduationYear(request.getExpectedGraduationYear());
+        }
+        if (request.getInterests() != null) profile.setInterests(request.getInterests());
+        if (request.getStudentSkills() != null) profile.setStudentSkills(request.getStudentSkills());
 
         Profile updatedProfile = profileRepository.save(profile);
         return mapToResponse(updatedProfile);
@@ -108,6 +122,12 @@ public class ProfileService {
                 .bio(profile.getBio())
                 .profilePictureUrl(profile.getProfilePictureUrl())
                 .linkedinUrl(profile.getLinkedinUrl())
+                .studentId(profile.getStudentId())
+                .program(profile.getProgram())
+                .department(profile.getDepartment())
+                .expectedGraduationYear(profile.getExpectedGraduationYear())
+                .interests(profile.getInterests())
+                .studentSkills(profile.getStudentSkills())
                 .createdAt(profile.getCreatedAt())
                 .updatedAt(profile.getUpdatedAt())
                 .build();

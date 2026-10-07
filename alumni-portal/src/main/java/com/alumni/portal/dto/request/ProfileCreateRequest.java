@@ -35,4 +35,21 @@ public class ProfileCreateRequest {
 
     @Size(max = 300)
     private String linkedinUrl;
+
+    @Size(max = 100)
+    private String studentId;
+
+    @Size(max = 100)
+    private String program;
+
+    @Size(max = 100)
+    private String department;
+
+    private Integer expectedGraduationYear;
+
+    @Size(max = 1000)
+    private String interests;
+
+    @Size(max = 1000)
+    private String studentSkills;
 }

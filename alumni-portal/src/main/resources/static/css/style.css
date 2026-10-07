@@ -18,7 +18,7 @@
 
     /* Typography */
     --font-main: 'Outfit', sans-serif;
-    
+
     /* Effects */
     --shadow-glass: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
     --blur-glass: blur(12px);
@@ -273,6 +273,108 @@ input:focus, textarea:focus {
     min-height: 20px;
 }
 
+.success-msg {
+    color: var(--clr-success);
+    font-size: 0.9rem;
+    margin-bottom: 1rem;
+    min-height: 20px;
+}
+
+.dashboard-overview {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.overview-card {
+    padding: 1.25rem;
+    border: 1px solid var(--clr-border);
+    border-radius: var(--radius-md);
+    background: rgba(255, 255, 255, 0.03);
+}
+
+.overview-card strong {
+    display: block;
+    margin: 0.3rem 0;
+    font-size: 1.15rem;
+}
+
+.overview-card p {
+    color: var(--clr-text-muted);
+    font-size: 0.9rem;
+}
+
+.overview-label {
+    color: var(--clr-primary);
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+}
+
+/* ==========================================================================
+   Role Selection
+   ========================================================================== */
+.role-container {
+    min-height: calc(100vh - 80px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3rem;
+}
+
+.role-hero {
+    max-width: 720px;
+}
+
+.role-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1.5rem;
+}
+
+.role-card {
+    padding: 2rem;
+    color: var(--clr-text);
+    text-decoration: none;
+    transition: var(--transition);
+}
+
+.role-card:hover {
+    transform: translateY(-6px);
+    background: var(--clr-surface-hover);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.role-icon {
+    display: grid;
+    place-items: center;
+    width: 3rem;
+    height: 3rem;
+    margin-bottom: 1.5rem;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--clr-primary), var(--clr-secondary));
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+.role-card h3 {
+    margin-bottom: 0.5rem;
+    font-size: 1.5rem;
+}
+
+.role-card p {
+    min-height: 3.2rem;
+    color: var(--clr-text-muted);
+}
+
+.role-link {
+    display: inline-block;
+    margin-top: 1.5rem;
+    color: var(--clr-primary);
+    font-weight: 600;
+}
+
 /* ==========================================================================
    Dashboard Layout
    ========================================================================== */
@@ -340,6 +442,21 @@ input:focus, textarea:focus {
     background: rgba(239, 68, 68, 0.1);
     color: var(--clr-error);
     border-color: rgba(239, 68, 68, 0.2);
+}
+
+.student-highlight {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 1.5rem;
+    padding: 1rem 1.25rem;
+    border-left: 3px solid var(--clr-primary);
+    border-radius: var(--radius-md);
+    background: rgba(99, 102, 241, 0.1);
+}
+
+.student-highlight span {
+    color: var(--clr-text-muted);
 }
 
 .badge {
@@ -452,6 +569,8 @@ input:focus, textarea:focus {
 @media (max-width: 768px) {
     .auth-container { grid-template-columns: 1fr; gap: 2rem; }
     .hero-text { grid-row: 1; text-align: center; }
+    .role-options { grid-template-columns: 1fr; }
+    .dashboard-overview { grid-template-columns: 1fr; }
     .dashboard-layout { grid-template-columns: 1fr; }
     .form-row { flex-direction: column; gap: 0; }
 }

@@ -1,7 +1,8 @@
-const API_URL = 'http://localhost:8080/api';
+﻿const API_URL = 'http://localhost:8080/api';
 const token = localStorage.getItem('token');
 const user = JSON.parse(localStorage.getItem('user') || '{}');
 let currentAlumniProfileId = null;
+const isStudent = user.role === 'ROLE_STUDENT';
 
 // Auth check
 if (!token) {
@@ -11,6 +12,23 @@ if (!token) {
 // Init Dashboard
 document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('userNameDisplay').textContent = `Welcome, ${user.firstName}`;
+    document.getElementById('dashboardTitle').textContent = isStudent
+        ? 'Student Dashboard'
+        : user.role === 'ROLE_ADMIN' ? 'Administrator Dashboard' : 'Alumni Dashboard';
+    document.getElementById('dashboardSubtitle').textContent = isStudent
+        ? 'Manage your academic identity, interests, and career goals.'
+        : 'Manage your profile, professional journey, and alumni network.';
+    document.getElementById('dashboardOverview').innerHTML = isStudent
+        ? `<div class="overview-card"><span class="overview-label">STUDENT SPACE</span><strong>Shape your next opportunity</strong><p>Keep your academic profile ready for alumni mentors and career conversations.</p></div>
+           <div class="overview-card"><span class="overview-label">NEXT STEP</span><strong>Complete your Student Details</strong><p>Add your program, graduation year, interests, and skills.</p></div>`
+        : `<div class="overview-card"><span class="overview-label">ALUMNI NETWORK</span><strong>Share your journey</strong><p>Help students learn from your academic and professional experience.</p></div>
+           <div class="overview-card"><span class="overview-label">NEXT STEP</span><strong>Submit your Alumni Details</strong><p>Add your career information to join the verified alumni directory.</p></div>`;
+    if (isStudent) {
+        document.getElementById('studentNav').classList.remove('hidden');
+        document.getElementById('alumniNav').classList.add('hidden');
+        document.getElementById('directoryNav').querySelector('button').textContent = 'Find Alumni Mentors';
+        document.getElementById('studentProfile').classList.remove('hidden');
+    }
     
     // Show admin tab if admin
     if (user.role === 'ROLE_ADMIN') {
@@ -36,6 +54,7 @@ function showSection(sectionId) {
     
     // Load data based on section
     if (sectionId === 'profile') loadProfile();
+    if (sectionId === 'studentProfile') loadProfile();
     if (sectionId === 'alumniProfile') loadAlumniProfile();
     if (sectionId === 'directory') loadDirectory();
     if (sectionId === 'verification') loadVerifications();
@@ -71,6 +90,12 @@ async function loadProfile() {
             document.getElementById('profCountry').value = p.country || '';
             document.getElementById('profBio').value = p.bio || '';
             document.getElementById('profLinkedin').value = p.linkedinUrl || '';
+            document.getElementById('studentId').value = p.studentId || '';
+            document.getElementById('studentProgram').value = p.program || '';
+            document.getElementById('studentDepartment').value = p.department || '';
+            document.getElementById('studentGraduationYear').value = p.expectedGraduationYear || '';
+            document.getElementById('studentInterests').value = p.interests || '';
+            document.getElementById('studentSkills').value = p.studentSkills || '';
         }
     } catch (e) { console.error("Profile not created yet or error"); }
 }
@@ -85,11 +110,45 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
         bio: document.getElementById('profBio').value,
         linkedinUrl: document.getElementById('profLinkedin').value
     };
+    if (isStudent) Object.assign(payload, getStudentFields());
 
     try {
         // Try PUT first, if 404 (doesn't exist), fallback to POST
         let res = await fetch(`${API_URL}/profiles/me`, {
             method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload)
+        });
+
+        function getStudentFields() {
+            return {
+                studentId: document.getElementById('studentId').value,
+                program: document.getElementById('studentProgram').value,
+                department: document.getElementById('studentDepartment').value,
+                expectedGraduationYear: parseInt(document.getElementById('studentGraduationYear').value) || null,
+                interests: document.getElementById('studentInterests').value,
+                studentSkills: document.getElementById('studentSkills').value
+            };
+        }
+
+        document.getElementById('studentForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            try {
+                let res = await fetch(`${API_URL}/profiles/me`, {
+                    method: 'PUT',
+                    headers: authHeaders(),
+                    body: JSON.stringify(getStudentFields())
+                });
+                if (res.status === 404) {
+                    res = await fetch(`${API_URL}/profiles`, {
+                        method: 'POST',
+                        headers: authHeaders(),
+                        body: JSON.stringify(getStudentFields())
+                    });
+                }
+                const data = await res.json();
+                showAlert('profileMessage', data.success ? 'Student details saved successfully.' : data.message || 'Failed to save student details.', !data.success);
+            } catch (error) {
+                showAlert('profileMessage', 'Network error while saving student details.', true);
+            }
         });
         
         if (res.status === 404) {

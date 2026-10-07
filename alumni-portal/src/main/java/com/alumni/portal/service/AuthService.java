@@ -9,6 +9,7 @@ import com.alumni.portal.exception.DuplicateResourceException;
 import com.alumni.portal.repository.UserRepository;
 import com.alumni.portal.security.JwtTokenProvider;
 import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -50,15 +51,7 @@ public class AuthService {
             throw new DuplicateResourceException("User", "email", request.getEmail());
         }
 
-        // Determine role (default to ALUMNI)
-        Role role = Role.ROLE_ALUMNI;
-        if (request.getRole() != null) {
-            try {
-                role = Role.valueOf(request.getRole());
-            } catch (IllegalArgumentException e) {
-                role = Role.ROLE_ALUMNI;
-            }
-        }
+        Role role = resolveRole(request.getRole(), Role.ROLE_ALUMNI);
 
         // Build and save user
         User user = User.builder()
@@ -101,10 +94,17 @@ public class AuthService {
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
 
-        String token = jwtTokenProvider.generateToken(authentication);
-
         User user = userRepository.findByEmail(request.getEmail())
                 .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Role requestedRole = request.getRole() == null || request.getRole().isBlank()
+                ? null
+                : resolveRole(request.getRole(), null);
+        if (requestedRole != null && user.getRole() != requestedRole) {
+            throw new BadCredentialsException("Invalid role for this account");
+        }
+
+        String token = jwtTokenProvider.generateToken(authentication);
 
         return AuthResponse.builder()
                 .accessToken(token)
@@ -115,5 +115,17 @@ public class AuthService {
                 .lastName(user.getLastName())
                 .role(user.getRole().name())
                 .build();
+    }
+
+    private Role resolveRole(String requestedRole, Role defaultRole) {
+        if (requestedRole == null || requestedRole.isBlank()) {
+            return defaultRole;
+        }
+
+        try {
+            return Role.valueOf(requestedRole);
+        } catch (IllegalArgumentException ex) {
+            throw new IllegalArgumentException("Invalid authentication role");
+        }
     }
 }

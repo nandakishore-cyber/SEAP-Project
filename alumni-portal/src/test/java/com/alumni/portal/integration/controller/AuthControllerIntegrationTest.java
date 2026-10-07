@@ -55,6 +55,25 @@ class AuthControllerIntegrationTest {
 
     @Test
     @Order(2)
+    @DisplayName("POST /api/auth/register — should register a student with student role")
+    void register_studentRole_returnsStudentResponse() throws Exception {
+        RegisterRequest request = RegisterRequest.builder()
+                .firstName("Student")
+                .lastName("Test")
+                .email("student@test.com")
+                .password("StudentPass123")
+                .role("ROLE_STUDENT")
+                .build();
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.data.role").value("ROLE_STUDENT"));
+    }
+
+    @Test
+    @Order(3)
     @DisplayName("POST /api/auth/register — should reject duplicate email")
     void register_withDuplicateEmail_returns409() throws Exception {
         // First registration
@@ -79,7 +98,7 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    @Order(3)
+    @Order(4)
     @DisplayName("POST /api/auth/register — should reject invalid email format")
     void register_withInvalidEmail_returns400() throws Exception {
         RegisterRequest request = RegisterRequest.builder()
@@ -98,7 +117,7 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    @Order(4)
+    @Order(5)
     @DisplayName("POST /api/auth/register — should reject short password")
     void register_withShortPassword_returns400() throws Exception {
         RegisterRequest request = RegisterRequest.builder()
@@ -116,7 +135,7 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    @Order(5)
+    @Order(6)
     @DisplayName("POST /api/auth/login — should login successfully")
     void login_withValidCredentials_returns200() throws Exception {
         // Register first
@@ -148,7 +167,36 @@ class AuthControllerIntegrationTest {
     }
 
     @Test
-    @Order(6)
+    @Order(7)
+    @DisplayName("POST /api/auth/login — should reject a login from the wrong role page")
+    void login_withWrongRole_returns401() throws Exception {
+        RegisterRequest registerRequest = RegisterRequest.builder()
+                .firstName("Role")
+                .lastName("Test")
+                .email("role.test@test.com")
+                .password("RolePass123")
+                .role("ROLE_STUDENT")
+                .build();
+
+        mockMvc.perform(post("/api/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(registerRequest)))
+                .andExpect(status().isCreated());
+
+        LoginRequest loginRequest = LoginRequest.builder()
+                .email("role.test@test.com")
+                .password("RolePass123")
+                .role("ROLE_ALUMNI")
+                .build();
+
+        mockMvc.perform(post("/api/auth/login")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @Order(8)
     @DisplayName("POST /api/auth/login — should reject wrong password")
     void login_withWrongPassword_returns401() throws Exception {
         // Register
