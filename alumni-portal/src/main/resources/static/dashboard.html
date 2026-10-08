@@ -28,8 +28,9 @@
         <aside class="sidebar glass-panel">
             <ul class="nav-links">
                 <li><button onclick="showSection('profile')" class="nav-btn active" id="nav-profile">My Profile</button></li>
-                <li><button onclick="showSection('alumniProfile')" class="nav-btn" id="nav-alumniProfile">Alumni Details</button></li>
-                <li><button onclick="showSection('directory')" class="nav-btn" id="nav-directory">Alumni Directory</button></li>
+                <li id="alumniNav"><button onclick="showSection('alumniProfile')" class="nav-btn" id="nav-alumniProfile">Alumni Details</button></li>
+                <li id="studentNav" class="hidden"><button onclick="showSection('studentProfile')" class="nav-btn" id="nav-studentProfile">Student Details</button></li>
+                <li id="directoryNav"><button onclick="showSection('directory')" class="nav-btn" id="nav-directory">Alumni Directory</button></li>
                 <li id="adminNav" class="hidden"><button onclick="showSection('verification')" class="nav-btn" id="nav-verification">Pending Verifications</button></li>
             </ul>
         </aside>
@@ -39,9 +40,9 @@
             <!-- Basic Profile Section -->
             <section id="section-profile" class="dashboard-section glass-panel active">
                 <div class="section-header">
-                    <h2>Basic Profile</h2>
-                    <p>Manage your personal information</p>
+                    <div><h2 id="dashboardTitle">Dashboard</h2><p id="dashboardSubtitle">Manage your personal information</p></div>
                 </div>
+                <div id="dashboardOverview" class="dashboard-overview"></div>
                 
                 <div id="profileMessage" class="alert hidden"></div>
                 
@@ -75,6 +76,29 @@
                         <input type="url" id="profLinkedin" placeholder="https://linkedin.com/in/username">
                     </div>
                     <button type="submit" class="btn btn-primary">Save Profile</button>
+                </form>
+            </section>
+
+            <section id="section-studentProfile" class="dashboard-section glass-panel hidden">
+                <div class="section-header">
+                    <div><h2>Student Details</h2><p>Keep your academic and career interests up to date.</p></div>
+                </div>
+                <div class="student-highlight">
+                    <strong>Build your future network</strong>
+                    <span>Share the subjects and skills you are developing so alumni can support your goals.</span>
+                </div>
+                <form id="studentForm" class="dashboard-form">
+                    <div class="form-row">
+                        <div class="form-group"><label for="studentId">Student ID</label><input id="studentId" placeholder="Your college ID"></div>
+                        <div class="form-group"><label for="studentProgram">Program / Degree</label><input id="studentProgram" placeholder="B.Tech Computer Science"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group"><label for="studentDepartment">Department</label><input id="studentDepartment" placeholder="Computer Science"></div>
+                        <div class="form-group"><label for="studentGraduationYear">Expected Graduation Year</label><input id="studentGraduationYear" type="number" min="2000" max="2100" placeholder="2027"></div>
+                    </div>
+                    <div class="form-group"><label for="studentInterests">Career Interests</label><textarea id="studentInterests" rows="3" placeholder="Software engineering, product design, research..."></textarea></div>
+                    <div class="form-group"><label for="studentSkills">Skills You Are Building</label><input id="studentSkills" placeholder="Java, Python, public speaking"></div>
+                    <button type="submit" class="btn btn-primary">Save Student Details</button>
                 </form>
             </section>
 

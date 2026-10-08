@@ -24,6 +24,12 @@ public class ProfileResponse {
     private String bio;
     private String profilePictureUrl;
     private String linkedinUrl;
+    private String studentId;
+    private String program;
+    private String department;
+    private Integer expectedGraduationYear;
+    private String interests;
+    private String studentSkills;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 }

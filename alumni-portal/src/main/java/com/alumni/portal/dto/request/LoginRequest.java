@@ -15,4 +15,7 @@ public class LoginRequest {
 
     @NotBlank(message = "Password is required")
     private String password;
+
+    /** Optional role selected by the role-specific login page. */
+    private String role;
 }

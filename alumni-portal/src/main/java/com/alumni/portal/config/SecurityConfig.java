@@ -53,6 +53,8 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/**").permitAll()
                 .requestMatchers("/h2-console/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/api-docs/**", "/swagger-ui.html").permitAll()
+                .requestMatchers("/", "/index.html", "/student.html", "/alumni.html",
+                        "/dashboard.html", "/css/**", "/js/**", "/favicon.ico").permitAll()
                 // View alumni profiles is public (for verified profiles)
                 .requestMatchers(HttpMethod.GET, "/api/alumni", "/api/alumni/{id}").permitAll()
                 // Admin-only endpoints

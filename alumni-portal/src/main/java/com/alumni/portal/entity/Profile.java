@@ -53,6 +53,24 @@ public class Profile {
     @Column(length = 300)
     private String linkedinUrl;
 
+    // Student-specific academic and career-planning details.
+    @Column(length = 100)
+    private String studentId;
+
+    @Column(length = 100)
+    private String program;
+
+    @Column(length = 100)
+    private String department;
+
+    private Integer expectedGraduationYear;
+
+    @Column(length = 1000)
+    private String interests;
+
+    @Column(length = 1000)
+    private String studentSkills;
+
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
