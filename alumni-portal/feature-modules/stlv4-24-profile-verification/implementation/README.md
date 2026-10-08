@@ -1,9 +1,6 @@
-# Implementation map
+# Implementation
 
-- Admin API: `alumni-portal/src/main/java/com/alumni/portal/controller/AlumniController.java`
-- Service: `alumni-portal/src/main/java/com/alumni/portal/service/AlumniService.java`
-- Status model: `alumni-portal/src/main/java/com/alumni/portal/entity/enums/VerificationStatus.java`
-- Request DTO: `alumni-portal/src/main/java/com/alumni/portal/dto/request/VerificationRequest.java`
-- Security rules: `alumni-portal/src/main/java/com/alumni/portal/config/SecurityConfig.java`
-- Admin dashboard: `alumni-portal/src/main/resources/static/dashboard.html`
-- Admin actions: `alumni-portal/src/main/resources/static/js/dashboard.js`
+This folder contains a handoff copy of the feature implementation under
+`implementation/src/main/java/com/alumni/portal/`, including the admin
+controller, service, verification status model, request DTOs, repositories,
+and required shared classes.

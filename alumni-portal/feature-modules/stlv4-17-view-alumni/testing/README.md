@@ -1,10 +1,12 @@
-# Testing map
+# Testing
 
-- Unit tests: `alumni-portal/src/test/java/com/alumni/portal/unit/service/AlumniServiceTest.java`
-- Repository tests: `alumni-portal/src/test/java/com/alumni/portal/integration/repository/AlumniProfileRepositoryIntegrationTest.java`
-- Journey tests: `alumni-portal/src/test/java/com/alumni/portal/integration/controller/FullJourneyIntegrationTest.java`
+The copied test modules are:
 
-Run from `alumni-portal/`:
+- `testing/src/test/java/com/alumni/portal/unit/service/AlumniServiceTest.java`
+- `testing/integration/AlumniProfileRepositoryIntegrationTest.java`
+- `testing/integration/FullJourneyIntegrationTest.java`
+
+Run the canonical application tests from `alumni-portal/`:
 
 ```text
 mvn -Dtest=AlumniServiceTest test
