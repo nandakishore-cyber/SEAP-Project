@@ -31,6 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('alumniNav').classList.add('hidden');
         document.getElementById('directoryNav').querySelector('button').textContent = 'Find Alumni Mentors';
         document.getElementById('studentProfile').classList.remove('hidden');
+        document.querySelector('.certificate-panel')?.classList.add('hidden');
     }
     if (isAlumni) {
         document.getElementById('mentorshipNav').classList.remove('hidden');
@@ -636,7 +637,7 @@ document.getElementById('eventCreationForm').addEventListener('submit', async ev
     }
 });
 
-document.getElementById('certificateForm').addEventListener('submit', async event => {
+document.getElementById('certificateForm')?.addEventListener('submit', async event => {
     event.preventDefault();
     const file = document.getElementById('bonafideFile').files[0];
     if (!file) return;
