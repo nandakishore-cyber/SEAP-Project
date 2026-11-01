@@ -63,13 +63,17 @@ function logout() {
 function showSection(sectionId) {
     // UI updates
     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
-    document.querySelectorAll('.dashboard-section').forEach(sec => sec.classList.remove('active'));
+    document.querySelectorAll('.dashboard-section').forEach(sec => {
+        sec.classList.remove('active');
+        sec.classList.add('hidden');
+    });
     
     const nav = document.getElementById(`nav-${sectionId}`);
     const section = document.getElementById(`section-${sectionId}`);
     if (!nav || !section) return;
     nav.classList.add('active');
     section.classList.add('active');
+    section.classList.remove('hidden');
     
     // Load data based on section
     if (sectionId === 'profile') loadProfile();
@@ -754,43 +758,42 @@ async function loadNotifications() {
         list.innerHTML = '<p class="error-msg">Unable to load notifications.</p>';
     }
 
-    async function loadStudentsForNotifications() {
-        if (!isAlumni) return;
-        try {
-            const response = await fetch(`${API_URL}/notifications/students`, { headers: authHeaders() });
-            const data = await response.json();
-            const select = document.getElementById('notificationStudent');
-            if (!select) return;
-            select.innerHTML = '<option value="">Select a student</option>' +
-                (data.data || []).map(student =>
-                    `<option value="${student.id}">${student.name} (${student.email})</option>`).join('');
-        } catch (error) {
-            showAlert('notificationsMessage', 'Unable to load students for notifications.', true);
-        }
-    }
-
-    document.getElementById('directNotificationForm')?.addEventListener('submit', async event => {
-        event.preventDefault();
-        try {
-            const response = await fetch(`${API_URL}/notifications/send-to-student`, {
-                method: 'POST',
-                headers: authHeaders(),
-                body: JSON.stringify({
-                    studentId: Number(document.getElementById('notificationStudent').value),
-                    title: document.getElementById('notificationTitle').value,
-                    message: document.getElementById('notificationMessage').value
-                })
-            });
-            const data = await response.json();
-            showAlert('notificationsMessage', data.success ? 'Notification sent to the student.' : data.message, !data.success);
-            if (data.success) {
-                document.getElementById('directNotificationForm').reset();
-            }
-        } catch (error) {
-            showAlert('notificationsMessage', 'Network error while sending notification.', true);
-        }
-    });
 }
+
+async function loadStudentsForNotifications() {
+    if (!isAlumni) return;
+    try {
+        const response = await fetch(`${API_URL}/notifications/students`, { headers: authHeaders() });
+        const data = await response.json();
+        const select = document.getElementById('notificationStudent');
+        if (!select) return;
+        select.innerHTML = '<option value="">Select a student</option>' +
+            (data.data || []).map(student =>
+                `<option value="${student.id}">${student.name} (${student.email})</option>`).join('');
+    } catch (error) {
+        showAlert('notificationsMessage', 'Unable to load students for notifications.', true);
+    }
+}
+
+document.getElementById('directNotificationForm')?.addEventListener('submit', async event => {
+    event.preventDefault();
+    try {
+        const response = await fetch(`${API_URL}/notifications/send-to-student`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({
+                studentId: Number(document.getElementById('notificationStudent').value),
+                title: document.getElementById('notificationTitle').value,
+                message: document.getElementById('notificationMessage').value
+            })
+        });
+        const data = await response.json();
+        showAlert('notificationsMessage', data.success ? 'Notification sent to the student.' : data.message, !data.success);
+        if (data.success) document.getElementById('directNotificationForm').reset();
+    } catch (error) {
+        showAlert('notificationsMessage', 'Network error while sending notification.', true);
+    }
+});
 
 async function markNotificationRead(notificationId) {
     await fetch(`${API_URL}/notifications/${notificationId}/read`, {
