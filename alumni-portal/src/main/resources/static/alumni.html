@@ -51,6 +51,11 @@
                     <div class="form-group"><label for="regExperience">Years of Experience</label><input id="regExperience" type="number" min="0" required value="0"></div>
                     <div class="form-group"><label for="regSkills">Professional Skills</label><input id="regSkills" required placeholder="Java, React, leadership"></div>
                 </div>
+                <div class="form-group">
+                    <label for="regBonafide">Bonafide Certificate (PDF, JPG, or PNG)</label>
+                    <input id="regBonafide" type="file" accept=".pdf,.jpg,.jpeg,.png" required>
+                    <small class="muted-text">Upload the certificate issued by your college administration.</small>
+                </div>
                 <div id="regError" class="error-msg" role="alert"></div>
                 <button type="submit" class="btn btn-primary btn-block"><span>Create Account</span><div class="loader hidden"></div></button>
             </form>

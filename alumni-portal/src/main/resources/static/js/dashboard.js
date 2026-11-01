@@ -3,6 +3,7 @@ const token = localStorage.getItem('token');
 const user = JSON.parse(localStorage.getItem('user') || '{}');
 let currentAlumniProfileId = null;
 const isStudent = user.role === 'ROLE_STUDENT';
+const isAlumni = user.role === 'ROLE_ALUMNI';
 
 // Auth check
 if (!token) {
@@ -31,6 +32,11 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('directoryNav').querySelector('button').textContent = 'Find Alumni Mentors';
         document.getElementById('studentProfile').classList.remove('hidden');
     }
+    if (isAlumni) {
+        document.getElementById('mentorshipNav').classList.remove('hidden');
+        document.getElementById('receivedMentorshipRequests').classList.remove('hidden');
+        document.getElementById('eventCreationPanel').classList.remove('hidden');
+    }
     
     // Show admin tab if admin
     if (user.role === 'ROLE_ADMIN') {
@@ -39,6 +45,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Load initial section
     loadProfile();
+    loadNotificationCount();
 });
 
 function logout() {
@@ -61,6 +68,7 @@ function showSection(sectionId) {
     if (sectionId === 'directory') loadDirectory();
     if (sectionId === 'mentorship') loadMentorship();
     if (sectionId === 'events') loadEvents();
+    if (sectionId === 'notifications') loadNotifications();
     if (sectionId === 'verification') loadVerifications();
 }
 
@@ -196,6 +204,7 @@ async function loadAlumniProfile() {
             const badge = document.getElementById('verificationBadge');
             badge.textContent = a.verificationStatus;
             badge.className = `badge ${a.verificationStatus.toLowerCase()}`;
+            loadBonafideStatus();
             
             // Disable form if verified or pending
             if(a.verificationStatus === 'VERIFIED' || a.verificationStatus === 'PENDING') {
@@ -225,6 +234,24 @@ document.getElementById('alumniForm').addEventListener('submit', async (e) => {
         const res = await fetch(`${API_URL}/alumni`, {
             method: 'POST', headers: authHeaders(), body: JSON.stringify(payload)
         });
+
+        async function loadBonafideStatus() {
+            if (!isAlumni) return;
+            try {
+                const response = await fetch(`${API_URL}/alumni/me/bonafide`, { headers: authHeaders() });
+                const data = await response.json();
+                const status = document.getElementById('certificateStatus');
+                if (data.success && data.data) {
+                    status.textContent = `Uploaded: ${data.data.originalFileName}`;
+                    status.className = 'status-chip success';
+                } else {
+                    status.textContent = 'Not uploaded';
+                    status.className = 'status-chip warning';
+                }
+            } catch (error) {
+                console.error('Unable to load bonafide certificate status', error);
+            }
+        }
         const data = await res.json();
         if (data.success || res.status === 201) {
             showAlert('alumniMessage', 'Alumni Profile submitted for verification!');
@@ -372,6 +399,10 @@ async function processVerification(id, isApproved) {
 // 5. Mentorship Requests (STLV4-82)
 // ==========================================
 async function loadMentorship() {
+    if (isAlumni) {
+        await loadReceivedMentorshipRequests();
+        return;
+    }
     if (!isStudent) return;
     const grid = document.getElementById('mentorGrid');
     const requests = document.getElementById('mentorshipRequests');
@@ -451,21 +482,66 @@ document.getElementById('mentorshipRequestForm').addEventListener('submit', asyn
     }
 });
 
+async function loadReceivedMentorshipRequests() {
+    if (!isAlumni) return;
+    const container = document.getElementById('receivedMentorshipRequests');
+    try {
+        const response = await fetch(`${API_URL}/mentorship/requests/received`, { headers: authHeaders() });
+        const data = await response.json();
+        const items = data.data || [];
+        container.innerHTML = `<h3 class="subsection-title">Requests from students</h3>` + (items.length
+            ? items.map(item => `
+                <div class="list-item">
+                    <div class="list-item-info">
+                        <h3>${item.studentName}</h3>
+                        <p>${item.message}</p>
+                        <small>Status: ${item.status}${item.goals ? ` · Goals: ${item.goals}` : ''}</small>
+                    </div>
+                    ${item.status === 'PENDING' ? `<div class="list-item-actions">
+                        <button class="btn btn-primary btn-sm" onclick="decideMentorship(${item.id}, 'ACCEPTED')">Accept</button>
+                        <button class="btn btn-outline btn-sm" onclick="decideMentorship(${item.id}, 'REJECTED')">Reject</button>
+                    </div>` : ''}
+                </div>`).join('')
+            : '<p class="muted-text">No students have requested mentorship yet.</p>');
+    } catch (error) {
+        container.innerHTML = '<p class="error-msg">Unable to load received mentorship requests.</p>';
+    }
+}
+
+async function decideMentorship(requestId, status) {
+    const responseMessage = window.prompt('Optional response message:', '') || '';
+    try {
+        const response = await fetch(`${API_URL}/mentorship/requests/${requestId}`, {
+            method: 'PUT',
+            headers: authHeaders(),
+            body: JSON.stringify({ status, responseMessage })
+        });
+        const data = await response.json();
+        showAlert('mentorshipMessage', data.success ? `Request ${status.toLowerCase()}.` : data.message, !data.success);
+        if (data.success) {
+            loadReceivedMentorshipRequests();
+            loadNotificationCount();
+        }
+    } catch (error) {
+        showAlert('mentorshipMessage', 'Network error while updating the request.', true);
+    }
+}
+
 // ==========================================
 // 6. Alumni Events (STLV4-84)
 // ==========================================
 async function loadEvents() {
-    if (!isStudent) return;
+    if (!isStudent && !isAlumni) return;
     const grid = document.getElementById('eventGrid');
     const registrations = document.getElementById('eventRegistrations');
     grid.innerHTML = '<div class="loader-container"><div class="loader"></div></div>';
     try {
-        const [eventResponse, registrationResponse] = await Promise.all([
-            fetch(`${API_URL}/events`, { headers: authHeaders() }),
-            fetch(`${API_URL}/events/registrations/me`, { headers: authHeaders() })
-        ]);
+        const eventResponse = await fetch(`${API_URL}/events`, { headers: authHeaders() });
+        const registrationResponse = isStudent
+            ? await fetch(`${API_URL}/events/registrations/me`, { headers: authHeaders() })
+            : null;
         const eventData = await eventResponse.json();
-        const registrationData = await registrationResponse.json();
+        const registrationData = registrationResponse ? await registrationResponse.json() : { data: [] };
         grid.innerHTML = '';
         (eventData.data || []).forEach(event => {
             const card = document.createElement('div');
@@ -476,10 +552,10 @@ async function loadEvents() {
                 <p>${event.description}</p>
                 <p class="dept">${new Date(event.eventDate).toLocaleString()} · ${event.mode}</p>
                 <p>${event.location} · ${remaining} seats left</p>
-                <button class="btn btn-primary btn-sm" ${event.registered || remaining <= 0 ? 'disabled' : ''}
+                ${isStudent ? `<button class="btn btn-primary btn-sm" ${event.registered || remaining <= 0 ? 'disabled' : ''}
                     onclick="openEventRegistration(${event.id})">
                     ${event.registered ? 'Registered' : remaining <= 0 ? 'Full' : 'Register'}
-                </button>
+                </button>` : ''}
             `;
             grid.appendChild(card);
         });
@@ -532,3 +608,102 @@ document.getElementById('eventRegistrationForm').addEventListener('submit', asyn
         showAlert('eventsMessage', 'Network error while registering for the event.', true);
     }
 });
+
+document.getElementById('eventCreationForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    try {
+        const response = await fetch(`${API_URL}/events`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({
+                title: document.getElementById('newEventTitle').value.trim(),
+                description: document.getElementById('newEventDescription').value.trim(),
+                eventDate: document.getElementById('newEventDate').value,
+                location: document.getElementById('newEventLocation').value.trim(),
+                mode: document.getElementById('newEventMode').value,
+                capacity: Number(document.getElementById('newEventCapacity').value),
+                registrationDeadline: document.getElementById('newEventDeadline').value
+            })
+        });
+        const data = await response.json();
+        showAlert('eventsMessage', data.success ? 'Event published and students notified.' : data.message, !data.success);
+        if (data.success) {
+            document.getElementById('eventCreationForm').reset();
+            loadEvents();
+        }
+    } catch (error) {
+        showAlert('eventsMessage', 'Network error while creating the event.', true);
+    }
+});
+
+document.getElementById('certificateForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const file = document.getElementById('bonafideFile').files[0];
+    if (!file) return;
+    const formData = new FormData();
+    formData.append('file', file);
+    try {
+        const response = await fetch(`${API_URL}/alumni/me/bonafide`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+        const data = await response.json();
+        showAlert('certificateMessage', data.success ? 'Certificate uploaded successfully.' : data.message, !data.success);
+        if (data.success) {
+            document.getElementById('certificateForm').reset();
+            loadBonafideStatus();
+        }
+    } catch (error) {
+        showAlert('certificateMessage', 'Network error while uploading the certificate.', true);
+    }
+});
+
+async function loadNotificationCount() {
+    try {
+        const response = await fetch(`${API_URL}/notifications/unread-count`, { headers: authHeaders() });
+        const data = await response.json();
+        const count = document.getElementById('notificationCount');
+        count.textContent = data.data || 0;
+        count.classList.toggle('hidden', !(data.data > 0));
+    } catch (error) {
+        console.error('Unable to load notification count', error);
+    }
+}
+
+async function loadNotifications() {
+    const list = document.getElementById('notificationList');
+    list.innerHTML = '<div class="loader-container"><div class="loader"></div></div>';
+    try {
+        const response = await fetch(`${API_URL}/notifications`, { headers: authHeaders() });
+        const data = await response.json();
+        const notifications = data.data || [];
+        list.innerHTML = notifications.length ? notifications.map(item => `
+            <div class="list-item notification-item ${item.read ? '' : 'unread'}" onclick="markNotificationRead(${item.id})">
+                <div class="list-item-info"><h3>${item.title}</h3><p>${item.message}</p><small>${new Date(item.createdAt).toLocaleString()}</small></div>
+                ${item.read ? '' : '<span class="notification-dot"></span>'}
+            </div>`).join('') : '<p class="muted-text">You are all caught up.</p>';
+    } catch (error) {
+        list.innerHTML = '<p class="error-msg">Unable to load notifications.</p>';
+    }
+}
+
+async function markNotificationRead(notificationId) {
+    await fetch(`${API_URL}/notifications/${notificationId}/read`, {
+        method: 'PUT',
+        headers: authHeaders()
+    });
+    loadNotifications();
+    loadNotificationCount();
+}
+
+async function markAllNotificationsRead() {
+    await fetch(`${API_URL}/notifications/read-all`, {
+        method: 'PUT',
+        headers: authHeaders()
+    });
+    loadNotifications();
+    loadNotificationCount();
+}
+
+setInterval(loadNotificationCount, 30000);

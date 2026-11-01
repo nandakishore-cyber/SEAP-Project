@@ -115,6 +115,24 @@ async function createRoleDetails(token) {
     if (!response.ok || !data.success) {
         throw new Error(data.message || 'Your account was created, but the profile details could not be saved.');
     }
+
+    async function uploadBonafideCertificate(token) {
+        if (pageRole !== 'ROLE_ALUMNI') return;
+        const fileInput = document.getElementById('regBonafide');
+        const file = fileInput && fileInput.files[0];
+        if (!file) throw new Error('A bonafide certificate is required for alumni registration.');
+        const formData = new FormData();
+        formData.append('file', file);
+        const response = await fetch(`${API_URL}/alumni/me/bonafide`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${token}` },
+            body: formData
+        });
+        const data = await readResponse(response);
+        if (!response.ok || !data.success) {
+            throw new Error(data.message || 'The bonafide certificate could not be uploaded.');
+        }
+    }
 }
 
 function showRegistrationSuccess(email) {
@@ -149,6 +167,7 @@ document.getElementById('registerForm').addEventListener('submit', event => {
         if (!data || !data.data) return;
         try {
             await createRoleDetails(data.data.accessToken);
+            await uploadBonafideCertificate(data.data.accessToken);
             localStorage.clear();
             showRegistrationSuccess(email);
         } catch (error) {

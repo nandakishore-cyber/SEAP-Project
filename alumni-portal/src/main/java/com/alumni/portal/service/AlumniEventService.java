@@ -14,6 +14,7 @@ import com.alumni.portal.repository.AlumniEventRepository;
 import com.alumni.portal.repository.EventRegistrationRepository;
 import com.alumni.portal.repository.UserRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -25,13 +26,23 @@ public class AlumniEventService {
     private final AlumniEventRepository eventRepository;
     private final EventRegistrationRepository registrationRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
+
+    @Autowired
+    public AlumniEventService(AlumniEventRepository eventRepository,
+                              EventRegistrationRepository registrationRepository,
+                              UserRepository userRepository,
+                              NotificationService notificationService) {
+        this.eventRepository = eventRepository;
+        this.registrationRepository = registrationRepository;
+        this.userRepository = userRepository;
+        this.notificationService = notificationService;
+    }
 
     public AlumniEventService(AlumniEventRepository eventRepository,
                               EventRegistrationRepository registrationRepository,
                               UserRepository userRepository) {
-        this.eventRepository = eventRepository;
-        this.registrationRepository = registrationRepository;
-        this.userRepository = userRepository;
+        this(eventRepository, registrationRepository, userRepository, null);
     }
 
     @Transactional(readOnly = true)
@@ -59,7 +70,16 @@ public class AlumniEventService {
                 .registrationDeadline(request.getRegistrationDeadline())
                 .organizer(organizer)
                 .build());
-        return mapEvent(saved, null);
+        AlumniEventResponse response = mapEvent(saved, null);
+        if (notificationService != null) {
+            userRepository.findByRole(Role.ROLE_STUDENT).forEach(student ->
+                    notificationService.notify(student.getId(), "ALUMNI_EVENT",
+                            "New alumni event: " + saved.getTitle(),
+                            organizer.getFirstName() + " " + organizer.getLastName()
+                                    + " created a new event for students.",
+                            saved.getId()));
+        }
+        return response;
     }
 
     @Transactional
@@ -88,7 +108,15 @@ public class AlumniEventService {
                 .expectations(request.getExpectations())
                 .dietaryPreference(request.getDietaryPreference())
                 .build());
-        return mapRegistration(saved);
+        EventRegistrationResponse response = mapRegistration(saved);
+        if (notificationService != null) {
+            notificationService.notify(event.getOrganizer().getId(), "EVENT_REGISTRATION",
+                    "New event registration",
+                    student.getFirstName() + " " + student.getLastName()
+                            + " registered for " + event.getTitle() + ".",
+                    event.getId());
+        }
+        return response;
     }
 
     @Transactional(readOnly = true)

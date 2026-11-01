@@ -16,6 +16,7 @@ import com.alumni.portal.repository.AlumniProfileRepository;
 import com.alumni.portal.repository.MentorshipRequestRepository;
 import com.alumni.portal.repository.UserRepository;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -28,15 +29,26 @@ public class MentorshipService {
     private final AlumniProfileRepository alumniProfileRepository;
     private final UserRepository userRepository;
     private final AlumniService alumniService;
+    private final NotificationService notificationService;
+
+    @Autowired
+    public MentorshipService(MentorshipRequestRepository requestRepository,
+                             AlumniProfileRepository alumniProfileRepository,
+                             UserRepository userRepository,
+                             AlumniService alumniService,
+                             NotificationService notificationService) {
+        this.requestRepository = requestRepository;
+        this.alumniProfileRepository = alumniProfileRepository;
+        this.userRepository = userRepository;
+        this.alumniService = alumniService;
+        this.notificationService = notificationService;
+    }
 
     public MentorshipService(MentorshipRequestRepository requestRepository,
                              AlumniProfileRepository alumniProfileRepository,
                              UserRepository userRepository,
                              AlumniService alumniService) {
-        this.requestRepository = requestRepository;
-        this.alumniProfileRepository = alumniProfileRepository;
-        this.userRepository = userRepository;
-        this.alumniService = alumniService;
+        this(requestRepository, alumniProfileRepository, userRepository, alumniService, null);
     }
 
     @Transactional(readOnly = true)
@@ -69,7 +81,14 @@ public class MentorshipService {
                 .goals(request.getGoals())
                 .status(MentorshipRequestStatus.PENDING)
                 .build());
-        return map(saved);
+        MentorshipRequestResponse response = map(saved);
+        if (notificationService != null) {
+            notificationService.notify(alumni.getUser().getId(), "MENTORSHIP_REQUEST",
+                    "New mentorship request",
+                    student.getFirstName() + " " + student.getLastName() + " sent you a mentorship request.",
+                    saved.getId());
+        }
+        return response;
     }
 
     @Transactional(readOnly = true)
@@ -101,7 +120,20 @@ public class MentorshipService {
         }
         request.setStatus(decision.getStatus());
         request.setResponseMessage(decision.getResponseMessage());
-        return map(requestRepository.save(request));
+        MentorshipRequestResponse response = map(requestRepository.save(request));
+        if (notificationService != null) {
+            notificationService.notify(request.getStudent().getId(), "MENTORSHIP_DECISION",
+                    "Mentorship request " + decision.getStatus().name().toLowerCase(),
+                    alumniUserName(request) + " " + decision.getStatus().name().toLowerCase()
+                            + " your mentorship request.",
+                    request.getId());
+        }
+        return response;
+    }
+
+    private String alumniUserName(MentorshipRequest request) {
+        User user = request.getAlumniProfile().getUser();
+        return user.getFirstName() + " " + user.getLastName();
     }
 
     private User findUser(Long id) {
