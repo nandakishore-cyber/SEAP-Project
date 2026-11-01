@@ -39,6 +39,25 @@ public class AlumniEventService {
         this.notificationService = notificationService;
     }
 
+    private AlumniEvent findEvent(Long eventId) {
+        return eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("AlumniEvent", "id", eventId));
+    }
+
+    private void requireOrganizer(User user, AlumniEvent event) {
+        if (user.getRole() != Role.ROLE_ADMIN
+                && (!event.getOrganizer().getId().equals(user.getId())
+                || user.getRole() != Role.ROLE_ALUMNI)) {
+            throw new IllegalArgumentException("Only the event organizer or an administrator can manage this event");
+        }
+    }
+
+    private void validateDates(AlumniEventRequest request) {
+        if (!request.getRegistrationDeadline().isBefore(request.getEventDate())) {
+            throw new IllegalArgumentException("Registration deadline must be before the event date");
+        }
+    }
+
     public AlumniEventService(AlumniEventRepository eventRepository,
                               EventRegistrationRepository registrationRepository,
                               UserRepository userRepository) {
@@ -57,9 +76,7 @@ public class AlumniEventService {
         if (organizer.getRole() != Role.ROLE_ADMIN && organizer.getRole() != Role.ROLE_ALUMNI) {
             throw new IllegalArgumentException("Only alumni or administrators can create events");
         }
-        if (!request.getRegistrationDeadline().isBefore(request.getEventDate())) {
-            throw new IllegalArgumentException("Registration deadline must be before the event date");
-        }
+        validateDates(request);
         AlumniEvent saved = eventRepository.save(AlumniEvent.builder()
                 .title(request.getTitle())
                 .description(request.getDescription())
@@ -80,6 +97,31 @@ public class AlumniEventService {
                             saved.getId()));
         }
         return response;
+    }
+
+    @Transactional
+    public AlumniEventResponse updateEvent(Long organizerId, Long eventId, AlumniEventRequest request) {
+        User organizer = findUser(organizerId);
+        AlumniEvent event = findEvent(eventId);
+        requireOrganizer(organizer, event);
+        validateDates(request);
+        event.setTitle(request.getTitle());
+        event.setDescription(request.getDescription());
+        event.setEventDate(request.getEventDate());
+        event.setLocation(request.getLocation());
+        event.setMode(request.getMode());
+        event.setCapacity(request.getCapacity());
+        event.setRegistrationDeadline(request.getRegistrationDeadline());
+        return mapEvent(eventRepository.save(event), null);
+    }
+
+    @Transactional
+    public void deleteEvent(Long organizerId, Long eventId) {
+        User organizer = findUser(organizerId);
+        AlumniEvent event = findEvent(eventId);
+        requireOrganizer(organizer, event);
+        registrationRepository.deleteByEventId(eventId);
+        eventRepository.delete(event);
     }
 
     @Transactional
@@ -146,6 +188,7 @@ public class AlumniEventService {
                 .registeredCount(registrationRepository.countByEventId(event.getId()))
                 .registrationDeadline(event.getRegistrationDeadline())
                 .organizerName(organizer.getFirstName() + " " + organizer.getLastName())
+                .organizerId(organizer.getId())
                 .registered(studentId != null &&
                         registrationRepository.existsByEventIdAndStudentId(event.getId(), studentId))
                 .build();

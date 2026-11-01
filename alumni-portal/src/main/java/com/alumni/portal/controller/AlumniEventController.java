@@ -48,6 +48,26 @@ public class AlumniEventController {
                 "Alumni event created", eventService.createEvent(getUserId(userDetails), request)));
     }
 
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ALUMNI')")
+    public ResponseEntity<ApiResponse<AlumniEventResponse>> updateEvent(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long id,
+            @Valid @RequestBody AlumniEventRequest request) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Alumni event updated",
+                eventService.updateEvent(getUserId(userDetails), id, request)));
+    }
+
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'ALUMNI')")
+    public ResponseEntity<ApiResponse<Void>> deleteEvent(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable Long id) {
+        eventService.deleteEvent(getUserId(userDetails), id);
+        return ResponseEntity.ok(ApiResponse.success("Alumni event deleted", null));
+    }
+
     @PostMapping("/{id}/registrations")
     @PreAuthorize("hasRole('STUDENT')")
     public ResponseEntity<ApiResponse<EventRegistrationResponse>> register(

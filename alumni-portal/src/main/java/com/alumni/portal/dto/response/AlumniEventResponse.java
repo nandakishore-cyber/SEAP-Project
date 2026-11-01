@@ -20,5 +20,6 @@ public class AlumniEventResponse {
     private Long registeredCount;
     private LocalDateTime registrationDeadline;
     private String organizerName;
+    private Long organizerId;
     private boolean registered;
 }

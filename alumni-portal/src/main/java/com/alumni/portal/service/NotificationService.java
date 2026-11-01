@@ -3,6 +3,7 @@ package com.alumni.portal.service;
 import com.alumni.portal.dto.response.NotificationResponse;
 import com.alumni.portal.entity.Notification;
 import com.alumni.portal.entity.User;
+import com.alumni.portal.entity.enums.Role;
 import com.alumni.portal.exception.ResourceNotFoundException;
 import com.alumni.portal.repository.NotificationRepository;
 import com.alumni.portal.repository.UserRepository;
@@ -36,6 +37,21 @@ public class NotificationService {
                 .message(message)
                 .relatedId(relatedId)
                 .build()));
+    }
+
+    @Transactional
+    public NotificationResponse sendToStudent(Long senderId, Long studentId, String title, String message) {
+        User sender = userRepository.findById(senderId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", senderId));
+        User student = userRepository.findById(studentId)
+                .orElseThrow(() -> new ResourceNotFoundException("User", "id", studentId));
+        if (sender.getRole() != Role.ROLE_ALUMNI && sender.getRole() != Role.ROLE_ADMIN) {
+            throw new IllegalArgumentException("Only alumni can send direct student notifications");
+        }
+        if (student.getRole() != Role.ROLE_STUDENT) {
+            throw new IllegalArgumentException("Notifications can only be sent to students");
+        }
+        return notify(studentId, "DIRECT_MESSAGE", title, message, null);
     }
 
     @Transactional(readOnly = true)

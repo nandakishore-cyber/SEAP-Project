@@ -106,7 +106,7 @@
             </section>
 
             <!-- Alumni Profile Section -->
-            <section id="section-alumniProfile" class="dashboard-section glass-panel">
+            <section id="section-alumniProfile" class="dashboard-section glass-panel hidden">
                 <div class="section-header">
                     <h2>Alumni Details</h2>
                     <p>Your academic and professional journey</p>
@@ -177,7 +177,7 @@
             </section>
 
             <!-- Directory Section -->
-            <section id="section-directory" class="dashboard-section glass-panel">
+            <section id="section-directory" class="dashboard-section glass-panel hidden">
                 <div class="section-header">
                     <h2>Alumni Directory</h2>
                     <p>Discover and connect with verified alumni</p>
@@ -197,8 +197,8 @@
 
             <section id="section-mentorship" class="dashboard-section glass-panel hidden">
                 <div class="section-header">
-                    <h2>Mentorship Requests</h2>
-                    <p>Choose a verified alumni mentor and share what you want to learn.</p>
+                    <h2 id="mentorshipTitle">Mentorship Requests</h2>
+                    <p id="mentorshipSubtitle">Choose a verified alumni mentor and share what you want to learn.</p>
                 </div>
                 <div id="mentorshipMessage" class="alert hidden"></div>
                 <div id="mentorGrid" class="grid-container"></div>
@@ -231,8 +231,9 @@
                 </div>
                 <div id="eventsMessage" class="alert hidden"></div>
                 <div id="eventCreationPanel" class="modal-inline hidden">
-                    <h3>Create an alumni event or webinar</h3>
+                    <h3 id="eventFormTitle">Create an alumni event or webinar</h3>
                     <form id="eventCreationForm" class="dashboard-form">
+                        <input type="hidden" id="editingEventId">
                         <div class="form-row">
                             <div class="form-group"><label for="newEventTitle">Title</label><input id="newEventTitle" required maxlength="150"></div>
                             <div class="form-group"><label for="newEventMode">Mode</label><select id="newEventMode"><option value="ONLINE">Online</option><option value="IN_PERSON">In person</option><option value="HYBRID">Hybrid</option></select></div>
@@ -246,7 +247,8 @@
                             <div class="form-group"><label for="newEventLocation">Location / meeting link</label><input id="newEventLocation" required maxlength="150"></div>
                             <div class="form-group"><label for="newEventCapacity">Capacity</label><input id="newEventCapacity" type="number" min="1" required></div>
                         </div>
-                        <button type="submit" class="btn btn-primary">Publish Event</button>
+                        <button type="submit" class="btn btn-primary" id="eventSubmitButton">Publish Event</button>
+                        <button type="button" class="btn btn-outline hidden" id="cancelEventEdit" onclick="cancelEventEdit()">Cancel edit</button>
                     </form>
                 </div>
                 <div id="eventGrid" class="grid-container"></div>
@@ -288,11 +290,20 @@
                     <button class="btn btn-outline btn-sm" onclick="markAllNotificationsRead()">Mark all as read</button>
                 </div>
                 <div id="notificationsMessage" class="alert hidden"></div>
+                <div id="directNotificationPanel" class="modal-inline hidden">
+                    <h3>Send a notification to a student</h3>
+                    <form id="directNotificationForm" class="dashboard-form">
+                        <div class="form-group"><label for="notificationStudent">Student</label><select id="notificationStudent" required><option value="">Select a student</option></select></div>
+                        <div class="form-group"><label for="notificationTitle">Title</label><input id="notificationTitle" maxlength="150" required></div>
+                        <div class="form-group"><label for="notificationMessage">Message</label><textarea id="notificationMessage" rows="3" maxlength="1000" required></textarea></div>
+                        <button type="submit" class="btn btn-primary">Send Notification</button>
+                    </form>
+                </div>
                 <div id="notificationList" class="list-container"></div>
             </section>
 
             <!-- Admin Verifications Section -->
-            <section id="section-verification" class="dashboard-section glass-panel">
+            <section id="section-verification" class="dashboard-section glass-panel hidden">
                 <div class="section-header">
                     <h2>Pending Verifications</h2>
                     <p>Admin panel to approve/reject alumni profiles</p>

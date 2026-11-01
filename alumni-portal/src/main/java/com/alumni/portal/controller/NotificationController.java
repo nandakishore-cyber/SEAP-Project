@@ -2,6 +2,9 @@ package com.alumni.portal.controller;
 
 import com.alumni.portal.dto.response.ApiResponse;
 import com.alumni.portal.dto.response.NotificationResponse;
+import com.alumni.portal.dto.request.NotificationSendRequest;
+import com.alumni.portal.dto.response.UserSummaryResponse;
+import com.alumni.portal.entity.enums.Role;
 import com.alumni.portal.entity.User;
 import com.alumni.portal.exception.ResourceNotFoundException;
 import com.alumni.portal.repository.UserRepository;
@@ -11,6 +14,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import jakarta.validation.Valid;
 
 import java.util.List;
 
@@ -53,6 +57,29 @@ public class NotificationController {
             @AuthenticationPrincipal UserDetails userDetails) {
         notificationService.markAllRead(getUserId(userDetails));
         return ResponseEntity.ok(ApiResponse.success("Notifications marked as read", null));
+    }
+
+    @GetMapping("/students")
+    @PreAuthorize("hasAnyRole('ALUMNI', 'ADMIN')")
+    public ResponseEntity<ApiResponse<List<UserSummaryResponse>>> getStudents() {
+        return ResponseEntity.ok(ApiResponse.success("Students retrieved",
+                userRepository.findByRole(Role.ROLE_STUDENT).stream()
+                        .map(student -> UserSummaryResponse.builder()
+                                .id(student.getId())
+                                .name(student.getFirstName() + " " + student.getLastName())
+                                .email(student.getEmail())
+                                .build())
+                        .toList()));
+    }
+
+    @PostMapping("/send-to-student")
+    @PreAuthorize("hasAnyRole('ALUMNI', 'ADMIN')")
+    public ResponseEntity<ApiResponse<NotificationResponse>> sendToStudent(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @Valid @RequestBody NotificationSendRequest request) {
+        return ResponseEntity.ok(ApiResponse.success("Notification sent to student",
+                notificationService.sendToStudent(getUserId(userDetails), request.getStudentId(),
+                        request.getTitle(), request.getMessage())));
     }
 
     private Long getUserId(UserDetails userDetails) {

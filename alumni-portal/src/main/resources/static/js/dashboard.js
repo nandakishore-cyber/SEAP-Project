@@ -30,13 +30,19 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('eventsNav').classList.remove('hidden');
         document.getElementById('alumniNav').classList.add('hidden');
         document.getElementById('directoryNav').querySelector('button').textContent = 'Find Alumni Mentors';
-        document.getElementById('studentProfile').classList.remove('hidden');
+        document.getElementById('section-studentProfile').classList.remove('hidden');
         document.querySelector('.certificate-panel')?.classList.add('hidden');
+        document.getElementById('alumniNav').classList.add('hidden');
     }
     if (isAlumni) {
+        document.getElementById('studentNav').classList.add('hidden');
+        document.getElementById('alumniNav').classList.remove('hidden');
         document.getElementById('mentorshipNav').classList.remove('hidden');
         document.getElementById('receivedMentorshipRequests').classList.remove('hidden');
         document.getElementById('eventCreationPanel').classList.remove('hidden');
+        document.getElementById('directNotificationPanel').classList.remove('hidden');
+        document.getElementById('mentorshipTitle').textContent = 'Student Mentorship Requests';
+        document.getElementById('mentorshipSubtitle').textContent = 'Review requests from students and accept or reject them.';
     }
     
     // Show admin tab if admin
@@ -45,7 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     // Load initial section
-    loadProfile();
+    showSection('profile');
     loadNotificationCount();
 });
 
@@ -59,8 +65,11 @@ function showSection(sectionId) {
     document.querySelectorAll('.nav-btn').forEach(btn => btn.classList.remove('active'));
     document.querySelectorAll('.dashboard-section').forEach(sec => sec.classList.remove('active'));
     
-    document.getElementById(`nav-${sectionId}`).classList.add('active');
-    document.getElementById(`section-${sectionId}`).classList.add('active');
+    const nav = document.getElementById(`nav-${sectionId}`);
+    const section = document.getElementById(`section-${sectionId}`);
+    if (!nav || !section) return;
+    nav.classList.add('active');
+    section.classList.add('active');
     
     // Load data based on section
     if (sectionId === 'profile') loadProfile();
@@ -69,7 +78,10 @@ function showSection(sectionId) {
     if (sectionId === 'directory') loadDirectory();
     if (sectionId === 'mentorship') loadMentorship();
     if (sectionId === 'events') loadEvents();
-    if (sectionId === 'notifications') loadNotifications();
+    if (sectionId === 'notifications') {
+        loadNotifications();
+        loadStudentsForNotifications();
+    }
     if (sectionId === 'verification') loadVerifications();
 }
 
@@ -113,6 +125,17 @@ async function loadProfile() {
     } catch (e) { console.error("Profile not created yet or error"); }
 }
 
+function getStudentFields() {
+    return {
+        studentId: document.getElementById('studentId').value,
+        program: document.getElementById('studentProgram').value,
+        department: document.getElementById('studentDepartment').value,
+        expectedGraduationYear: parseInt(document.getElementById('studentGraduationYear').value) || null,
+        interests: document.getElementById('studentInterests').value,
+        studentSkills: document.getElementById('studentSkills').value
+    };
+}
+
 document.getElementById('profileForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const payload = {
@@ -131,39 +154,6 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
             method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload)
         });
 
-        function getStudentFields() {
-            return {
-                studentId: document.getElementById('studentId').value,
-                program: document.getElementById('studentProgram').value,
-                department: document.getElementById('studentDepartment').value,
-                expectedGraduationYear: parseInt(document.getElementById('studentGraduationYear').value) || null,
-                interests: document.getElementById('studentInterests').value,
-                studentSkills: document.getElementById('studentSkills').value
-            };
-        }
-
-        document.getElementById('studentForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            try {
-                let res = await fetch(`${API_URL}/profiles/me`, {
-                    method: 'PUT',
-                    headers: authHeaders(),
-                    body: JSON.stringify(getStudentFields())
-                });
-                if (res.status === 404) {
-                    res = await fetch(`${API_URL}/profiles`, {
-                        method: 'POST',
-                        headers: authHeaders(),
-                        body: JSON.stringify(getStudentFields())
-                    });
-                }
-                const data = await res.json();
-                showAlert('profileMessage', data.success ? 'Student details saved successfully.' : data.message || 'Failed to save student details.', !data.success);
-            } catch (error) {
-                showAlert('profileMessage', 'Network error while saving student details.', true);
-            }
-        });
-        
         if (res.status === 404) {
             res = await fetch(`${API_URL}/profiles`, {
                 method: 'POST', headers: authHeaders(), body: JSON.stringify(payload)
@@ -178,6 +168,28 @@ document.getElementById('profileForm').addEventListener('submit', async (e) => {
         }
     } catch (e) {
         showAlert('profileMessage', 'Network error', true);
+    }
+});
+
+document.getElementById('studentForm')?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+        let res = await fetch(`${API_URL}/profiles/me`, {
+            method: 'PUT',
+            headers: authHeaders(),
+            body: JSON.stringify(getStudentFields())
+        });
+        if (res.status === 404) {
+            res = await fetch(`${API_URL}/profiles`, {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify(getStudentFields())
+            });
+        }
+        const data = await res.json();
+        showAlert('profileMessage', data.success ? 'Student details saved successfully.' : data.message || 'Failed to save student details.', !data.success);
+    } catch (error) {
+        showAlert('profileMessage', 'Network error while saving student details.', true);
     }
 });
 
@@ -556,14 +568,19 @@ async function loadEvents() {
                 ${isStudent ? `<button class="btn btn-primary btn-sm" ${event.registered || remaining <= 0 ? 'disabled' : ''}
                     onclick="openEventRegistration(${event.id})">
                     ${event.registered ? 'Registered' : remaining <= 0 ? 'Full' : 'Register'}
-                </button>` : ''}
+                </button>` : isAlumni && (user.role === 'ROLE_ADMIN' || event.organizerId === user.userId) ? `<div class="list-item-actions">
+                    <button class="btn btn-outline btn-sm" onclick='editEvent(${JSON.stringify(event)})'>Edit</button>
+                    <button class="btn btn-danger btn-sm" onclick="deleteEvent(${event.id})">Delete</button>
+                </div>` : ''}
             `;
             grid.appendChild(card);
         });
         if (!grid.children.length) {
             grid.innerHTML = '<p class="error-msg">No upcoming alumni events are available.</p>';
         }
-        registrations.innerHTML = (registrationData.data || []).length
+        registrations.innerHTML = isAlumni
+            ? '<p class="muted-text">Manage your published events above. Students will see new events in their dashboard and receive notifications.</p>'
+            : (registrationData.data || []).length
             ? `<h3 class="subsection-title">My event registrations</h3>${registrationData.data.map(item => `
                 <div class="list-item"><div class="list-item-info">
                     <h3>${item.eventTitle}</h3><p>${item.attendanceMode} · ${item.currentSemester}</p>
@@ -613,8 +630,9 @@ document.getElementById('eventRegistrationForm').addEventListener('submit', asyn
 document.getElementById('eventCreationForm').addEventListener('submit', async event => {
     event.preventDefault();
     try {
-        const response = await fetch(`${API_URL}/events`, {
-            method: 'POST',
+        const eventId = document.getElementById('editingEventId').value;
+        const response = await fetch(`${API_URL}/events${eventId ? `/${eventId}` : ''}`, {
+            method: eventId ? 'PUT' : 'POST',
             headers: authHeaders(),
             body: JSON.stringify({
                 title: document.getElementById('newEventTitle').value.trim(),
@@ -627,15 +645,63 @@ document.getElementById('eventCreationForm').addEventListener('submit', async ev
             })
         });
         const data = await response.json();
-        showAlert('eventsMessage', data.success ? 'Event published and students notified.' : data.message, !data.success);
+        showAlert('eventsMessage', data.success
+            ? (eventId ? 'Event updated successfully.' : 'Event published and students notified.')
+            : data.message, !data.success);
         if (data.success) {
-            document.getElementById('eventCreationForm').reset();
+            cancelEventEdit();
             loadEvents();
         }
     } catch (error) {
         showAlert('eventsMessage', 'Network error while creating the event.', true);
     }
 });
+
+function editEvent(event) {
+    document.getElementById('editingEventId').value = event.id;
+    document.getElementById('newEventTitle').value = event.title || '';
+    document.getElementById('newEventDescription').value = event.description || '';
+    document.getElementById('newEventDate').value = toDateTimeLocal(event.eventDate);
+    document.getElementById('newEventDeadline').value = toDateTimeLocal(event.registrationDeadline);
+    document.getElementById('newEventLocation').value = event.location || '';
+    document.getElementById('newEventCapacity').value = event.capacity || '';
+    document.getElementById('newEventMode').value = event.mode || 'ONLINE';
+    document.getElementById('eventFormTitle').textContent = 'Update event or webinar';
+    document.getElementById('eventSubmitButton').textContent = 'Save Changes';
+    document.getElementById('cancelEventEdit').classList.remove('hidden');
+    document.getElementById('eventCreationPanel').classList.remove('hidden');
+    document.getElementById('eventCreationPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function cancelEventEdit() {
+    document.getElementById('eventCreationForm').reset();
+    document.getElementById('editingEventId').value = '';
+    document.getElementById('eventFormTitle').textContent = 'Create an alumni event or webinar';
+    document.getElementById('eventSubmitButton').textContent = 'Publish Event';
+    document.getElementById('cancelEventEdit').classList.add('hidden');
+}
+
+function toDateTimeLocal(value) {
+    if (!value) return '';
+    const date = new Date(value);
+    const offset = date.getTimezoneOffset() * 60000;
+    return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+}
+
+async function deleteEvent(eventId) {
+    if (!window.confirm('Delete this event and its registrations?')) return;
+    try {
+        const response = await fetch(`${API_URL}/events/${eventId}`, {
+            method: 'DELETE',
+            headers: authHeaders()
+        });
+        const data = await response.json();
+        showAlert('eventsMessage', data.success ? 'Event deleted successfully.' : data.message, !data.success);
+        if (data.success) loadEvents();
+    } catch (error) {
+        showAlert('eventsMessage', 'Network error while deleting the event.', true);
+    }
+}
 
 document.getElementById('certificateForm')?.addEventListener('submit', async event => {
     event.preventDefault();
@@ -687,6 +753,43 @@ async function loadNotifications() {
     } catch (error) {
         list.innerHTML = '<p class="error-msg">Unable to load notifications.</p>';
     }
+
+    async function loadStudentsForNotifications() {
+        if (!isAlumni) return;
+        try {
+            const response = await fetch(`${API_URL}/notifications/students`, { headers: authHeaders() });
+            const data = await response.json();
+            const select = document.getElementById('notificationStudent');
+            if (!select) return;
+            select.innerHTML = '<option value="">Select a student</option>' +
+                (data.data || []).map(student =>
+                    `<option value="${student.id}">${student.name} (${student.email})</option>`).join('');
+        } catch (error) {
+            showAlert('notificationsMessage', 'Unable to load students for notifications.', true);
+        }
+    }
+
+    document.getElementById('directNotificationForm')?.addEventListener('submit', async event => {
+        event.preventDefault();
+        try {
+            const response = await fetch(`${API_URL}/notifications/send-to-student`, {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify({
+                    studentId: Number(document.getElementById('notificationStudent').value),
+                    title: document.getElementById('notificationTitle').value,
+                    message: document.getElementById('notificationMessage').value
+                })
+            });
+            const data = await response.json();
+            showAlert('notificationsMessage', data.success ? 'Notification sent to the student.' : data.message, !data.success);
+            if (data.success) {
+                document.getElementById('directNotificationForm').reset();
+            }
+        } catch (error) {
+            showAlert('notificationsMessage', 'Network error while sending notification.', true);
+        }
+    });
 }
 
 async function markNotificationRead(notificationId) {
