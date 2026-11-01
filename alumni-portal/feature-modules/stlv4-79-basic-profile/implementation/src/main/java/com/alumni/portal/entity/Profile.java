@@ -9,7 +9,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 /**
- * Basic profile — personal & contact information.
+ * Basic profile â€” personal & contact information.
  * Created after registration (STLV4-79: Basic Profile Creation).
  */
 @Entity

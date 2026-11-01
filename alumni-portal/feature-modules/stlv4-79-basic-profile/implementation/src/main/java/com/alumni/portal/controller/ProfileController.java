@@ -36,7 +36,7 @@ public class ProfileController {
     }
 
     /**
-     * POST /api/profiles — Create a basic profile for the authenticated user.
+     * POST /api/profiles â€” Create a basic profile for the authenticated user.
      */
     @PostMapping
     @Operation(summary = "Create basic profile")
@@ -50,7 +50,7 @@ public class ProfileController {
     }
 
     /**
-     * GET /api/profiles/me — Get the authenticated user's profile.
+     * GET /api/profiles/me â€” Get the authenticated user's profile.
      */
     @GetMapping("/me")
     @Operation(summary = "Get own profile")
@@ -62,7 +62,7 @@ public class ProfileController {
     }
 
     /**
-     * PUT /api/profiles/me — Update the authenticated user's profile.
+     * PUT /api/profiles/me â€” Update the authenticated user's profile.
      */
     @PutMapping("/me")
     @Operation(summary = "Update own profile")

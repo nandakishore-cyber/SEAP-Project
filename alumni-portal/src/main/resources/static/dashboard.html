@@ -31,6 +31,8 @@
                 <li id="alumniNav"><button onclick="showSection('alumniProfile')" class="nav-btn" id="nav-alumniProfile">Alumni Details</button></li>
                 <li id="studentNav" class="hidden"><button onclick="showSection('studentProfile')" class="nav-btn" id="nav-studentProfile">Student Details</button></li>
                 <li id="directoryNav"><button onclick="showSection('directory')" class="nav-btn" id="nav-directory">Alumni Directory</button></li>
+                <li id="mentorshipNav" class="hidden"><button onclick="showSection('mentorship')" class="nav-btn" id="nav-mentorship">Mentorship Requests</button></li>
+                <li id="eventsNav" class="hidden"><button onclick="showSection('events')" class="nav-btn" id="nav-events">Alumni Events</button></li>
                 <li id="adminNav" class="hidden"><button onclick="showSection('verification')" class="nav-btn" id="nav-verification">Pending Verifications</button></li>
             </ul>
         </aside>
@@ -177,6 +179,73 @@
                     <!-- Cards injected by JS -->
                     <div class="loader-container"><div class="loader"></div></div>
                 </div>
+            </section>
+
+            <section id="section-mentorship" class="dashboard-section glass-panel hidden">
+                <div class="section-header">
+                    <h2>Mentorship Requests</h2>
+                    <p>Choose a verified alumni mentor and share what you want to learn.</p>
+                </div>
+                <div id="mentorshipMessage" class="alert hidden"></div>
+                <div id="mentorGrid" class="grid-container"></div>
+                <div id="mentorshipRequestPanel" class="modal-inline hidden">
+                    <h3>Send a mentorship request</h3>
+                    <form id="mentorshipRequestForm" class="dashboard-form">
+                        <input type="hidden" id="selectedMentorId">
+                        <div class="form-group">
+                            <label for="mentorshipMessageInput">Message</label>
+                            <textarea id="mentorshipMessageInput" rows="3" maxlength="1000" required
+                                      placeholder="Tell the mentor why you would like to connect."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="mentorshipGoals">Learning goals (optional)</label>
+                            <textarea id="mentorshipGoals" rows="2" maxlength="500"
+                                      placeholder="What would you like guidance with?"></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Send Request</button>
+                        <button type="button" class="btn btn-outline" onclick="closeMentorshipRequest()">Cancel</button>
+                    </form>
+                </div>
+                <div id="mentorshipRequests" class="list-container"></div>
+            </section>
+
+            <section id="section-events" class="dashboard-section glass-panel hidden">
+                <div class="section-header">
+                    <h2>Alumni Events</h2>
+                    <p>Join talks, workshops, and networking sessions hosted by the alumni community.</p>
+                </div>
+                <div id="eventsMessage" class="alert hidden"></div>
+                <div id="eventGrid" class="grid-container"></div>
+                <div id="eventRegistrationPanel" class="modal-inline hidden">
+                    <h3>Register for this event</h3>
+                    <form id="eventRegistrationForm" class="dashboard-form">
+                        <input type="hidden" id="selectedEventId">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="eventAttendanceMode">Attendance mode</label>
+                                <select id="eventAttendanceMode" required>
+                                    <option value="ONLINE">Online</option>
+                                    <option value="IN_PERSON">In person</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="eventSemester">Current semester</label>
+                                <input id="eventSemester" placeholder="Semester 5" required>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="eventExpectations">What do you expect from this event?</label>
+                            <textarea id="eventExpectations" rows="3" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="eventDietaryPreference">Dietary preference (optional)</label>
+                            <input id="eventDietaryPreference" placeholder="Vegetarian, no preference">
+                        </div>
+                        <button type="submit" class="btn btn-primary">Complete Registration</button>
+                        <button type="button" class="btn btn-outline" onclick="closeEventRegistration()">Cancel</button>
+                    </form>
+                </div>
+                <div id="eventRegistrations" class="list-container"></div>
             </section>
 
             <!-- Admin Verifications Section -->

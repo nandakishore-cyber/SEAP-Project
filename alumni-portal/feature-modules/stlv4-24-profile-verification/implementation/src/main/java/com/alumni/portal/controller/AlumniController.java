@@ -42,7 +42,7 @@ public class AlumniController {
     }
 
     /**
-     * POST /api/alumni — Create an alumni profile (authenticated users only).
+     * POST /api/alumni â€” Create an alumni profile (authenticated users only).
      */
     @PostMapping
     @SecurityRequirement(name = "bearerAuth")
@@ -57,7 +57,7 @@ public class AlumniController {
     }
 
     /**
-     * GET /api/alumni/me — Get the authenticated user's alumni profile.
+     * GET /api/alumni/me â€” Get the authenticated user's alumni profile.
      */
     @GetMapping("/me")
     @SecurityRequirement(name = "bearerAuth")
@@ -70,7 +70,7 @@ public class AlumniController {
     }
 
     /**
-     * GET /api/alumni/{id} — View an alumni profile by ID (public).
+     * GET /api/alumni/{id} â€” View an alumni profile by ID (public).
      */
     @GetMapping("/{id}")
     @Operation(summary = "View alumni profile by ID")
@@ -81,7 +81,7 @@ public class AlumniController {
     }
 
     /**
-     * GET /api/alumni — Search/list verified alumni profiles (public).
+     * GET /api/alumni â€” Search/list verified alumni profiles (public).
      */
     @GetMapping
     @Operation(summary = "Search alumni profiles")
@@ -96,7 +96,7 @@ public class AlumniController {
     }
 
     /**
-     * GET /api/alumni/pending — List pending verification requests (admin only).
+     * GET /api/alumni/pending â€” List pending verification requests (admin only).
      */
     @GetMapping("/pending")
     @PreAuthorize("hasRole('ADMIN')")
@@ -110,7 +110,7 @@ public class AlumniController {
     }
 
     /**
-     * PUT /api/alumni/{id}/verify — Verify or reject an alumni profile (admin only).
+     * PUT /api/alumni/{id}/verify â€” Verify or reject an alumni profile (admin only).
      */
     @PutMapping("/{id}/verify")
     @PreAuthorize("hasRole('ADMIN')")

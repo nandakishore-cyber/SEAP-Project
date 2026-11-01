@@ -25,6 +25,8 @@ document.addEventListener('DOMContentLoaded', () => {
            <div class="overview-card"><span class="overview-label">NEXT STEP</span><strong>Submit your Alumni Details</strong><p>Add your career information to join the verified alumni directory.</p></div>`;
     if (isStudent) {
         document.getElementById('studentNav').classList.remove('hidden');
+        document.getElementById('mentorshipNav').classList.remove('hidden');
+        document.getElementById('eventsNav').classList.remove('hidden');
         document.getElementById('alumniNav').classList.add('hidden');
         document.getElementById('directoryNav').querySelector('button').textContent = 'Find Alumni Mentors';
         document.getElementById('studentProfile').classList.remove('hidden');
@@ -57,6 +59,8 @@ function showSection(sectionId) {
     if (sectionId === 'studentProfile') loadProfile();
     if (sectionId === 'alumniProfile') loadAlumniProfile();
     if (sectionId === 'directory') loadDirectory();
+    if (sectionId === 'mentorship') loadMentorship();
+    if (sectionId === 'events') loadEvents();
     if (sectionId === 'verification') loadVerifications();
 }
 
@@ -363,3 +367,168 @@ async function processVerification(id, isApproved) {
         }
     } catch (e) { alert("Action failed."); }
 }
+
+// ==========================================
+// 5. Mentorship Requests (STLV4-82)
+// ==========================================
+async function loadMentorship() {
+    if (!isStudent) return;
+    const grid = document.getElementById('mentorGrid');
+    const requests = document.getElementById('mentorshipRequests');
+    grid.innerHTML = '<div class="loader-container"><div class="loader"></div></div>';
+    try {
+        const [mentorResponse, requestResponse] = await Promise.all([
+            fetch(`${API_URL}/mentorship/mentors`, { headers: authHeaders() }),
+            fetch(`${API_URL}/mentorship/requests/me`, { headers: authHeaders() })
+        ]);
+        const mentorData = await mentorResponse.json();
+        const requestData = await requestResponse.json();
+        grid.innerHTML = '';
+        (mentorData.data || []).forEach(mentor => {
+            const card = document.createElement('div');
+            card.className = 'alumni-card glass-panel';
+            card.innerHTML = `
+                <h3>${mentor.firstName} ${mentor.lastName}</h3>
+                <p class="dept">${mentor.currentDesignation || 'Alumni mentor'} @ ${mentor.currentCompany || 'Professional network'}</p>
+                <p>${mentor.department} · ${mentor.graduationYear}</p>
+                <button class="btn btn-primary btn-sm" onclick="openMentorshipRequest(${mentor.id})">Request mentorship</button>
+            `;
+            grid.appendChild(card);
+        });
+        if (!grid.children.length) {
+            grid.innerHTML = '<p class="error-msg">No verified alumni mentors are available yet.</p>';
+        }
+        renderMentorshipRequests(requests, requestData.data || []);
+    } catch (error) {
+        grid.innerHTML = '<p class="error-msg">Unable to load mentors right now.</p>';
+        requests.innerHTML = '';
+    }
+}
+
+function renderMentorshipRequests(container, items) {
+    container.innerHTML = items.length
+        ? `<h3 class="subsection-title">My requests</h3>${items.map(item => `
+            <div class="list-item">
+                <div class="list-item-info">
+                    <h3>${item.alumniName}</h3>
+                    <p>${item.message}</p>
+                    <small>Status: ${item.status}</small>
+                </div>
+            </div>`).join('')}`
+        : '<p style="color:var(--clr-text-muted);">You have not sent a mentorship request yet.</p>';
+}
+
+function openMentorshipRequest(mentorId) {
+    document.getElementById('selectedMentorId').value = mentorId;
+    document.getElementById('mentorshipRequestPanel').classList.remove('hidden');
+}
+
+function closeMentorshipRequest() {
+    document.getElementById('mentorshipRequestPanel').classList.add('hidden');
+    document.getElementById('mentorshipRequestForm').reset();
+}
+
+document.getElementById('mentorshipRequestForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    try {
+        const response = await fetch(`${API_URL}/mentorship/requests`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({
+                alumniProfileId: Number(document.getElementById('selectedMentorId').value),
+                message: document.getElementById('mentorshipMessageInput').value,
+                goals: document.getElementById('mentorshipGoals').value
+            })
+        });
+        const data = await response.json();
+        showAlert('mentorshipMessage', data.success ? 'Mentorship request sent.' : data.message, !data.success);
+        if (data.success) {
+            closeMentorshipRequest();
+            loadMentorship();
+        }
+    } catch (error) {
+        showAlert('mentorshipMessage', 'Network error while sending the request.', true);
+    }
+});
+
+// ==========================================
+// 6. Alumni Events (STLV4-84)
+// ==========================================
+async function loadEvents() {
+    if (!isStudent) return;
+    const grid = document.getElementById('eventGrid');
+    const registrations = document.getElementById('eventRegistrations');
+    grid.innerHTML = '<div class="loader-container"><div class="loader"></div></div>';
+    try {
+        const [eventResponse, registrationResponse] = await Promise.all([
+            fetch(`${API_URL}/events`, { headers: authHeaders() }),
+            fetch(`${API_URL}/events/registrations/me`, { headers: authHeaders() })
+        ]);
+        const eventData = await eventResponse.json();
+        const registrationData = await registrationResponse.json();
+        grid.innerHTML = '';
+        (eventData.data || []).forEach(event => {
+            const card = document.createElement('div');
+            card.className = 'alumni-card glass-panel';
+            const remaining = event.capacity - event.registeredCount;
+            card.innerHTML = `
+                <h3>${event.title}</h3>
+                <p>${event.description}</p>
+                <p class="dept">${new Date(event.eventDate).toLocaleString()} · ${event.mode}</p>
+                <p>${event.location} · ${remaining} seats left</p>
+                <button class="btn btn-primary btn-sm" ${event.registered || remaining <= 0 ? 'disabled' : ''}
+                    onclick="openEventRegistration(${event.id})">
+                    ${event.registered ? 'Registered' : remaining <= 0 ? 'Full' : 'Register'}
+                </button>
+            `;
+            grid.appendChild(card);
+        });
+        if (!grid.children.length) {
+            grid.innerHTML = '<p class="error-msg">No upcoming alumni events are available.</p>';
+        }
+        registrations.innerHTML = (registrationData.data || []).length
+            ? `<h3 class="subsection-title">My event registrations</h3>${registrationData.data.map(item => `
+                <div class="list-item"><div class="list-item-info">
+                    <h3>${item.eventTitle}</h3><p>${item.attendanceMode} · ${item.currentSemester}</p>
+                </div></div>`).join('')}`
+            : '<p style="color:var(--clr-text-muted);">You have no event registrations yet.</p>';
+    } catch (error) {
+        grid.innerHTML = '<p class="error-msg">Unable to load alumni events right now.</p>';
+        registrations.innerHTML = '';
+    }
+}
+
+function openEventRegistration(eventId) {
+    document.getElementById('selectedEventId').value = eventId;
+    document.getElementById('eventRegistrationPanel').classList.remove('hidden');
+}
+
+function closeEventRegistration() {
+    document.getElementById('eventRegistrationPanel').classList.add('hidden');
+    document.getElementById('eventRegistrationForm').reset();
+}
+
+document.getElementById('eventRegistrationForm').addEventListener('submit', async event => {
+    event.preventDefault();
+    const eventId = document.getElementById('selectedEventId').value;
+    try {
+        const response = await fetch(`${API_URL}/events/${eventId}/registrations`, {
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({
+                attendanceMode: document.getElementById('eventAttendanceMode').value,
+                currentSemester: document.getElementById('eventSemester').value,
+                expectations: document.getElementById('eventExpectations').value,
+                dietaryPreference: document.getElementById('eventDietaryPreference').value
+            })
+        });
+        const data = await response.json();
+        showAlert('eventsMessage', data.success ? 'Event registration completed.' : data.message, !data.success);
+        if (data.success) {
+            closeEventRegistration();
+            loadEvents();
+        }
+    } catch (error) {
+        showAlert('eventsMessage', 'Network error while registering for the event.', true);
+    }
+});

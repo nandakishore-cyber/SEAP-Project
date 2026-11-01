@@ -85,7 +85,7 @@ public class AlumniService {
     }
 
     /**
-     * Search/list verified alumni profiles (STLV4-17: View Alumni Profile — subtasks).
+     * Search/list verified alumni profiles (STLV4-17: View Alumni Profile â€” subtasks).
      */
     @Transactional(readOnly = true)
     public Page<AlumniProfileResponse> searchAlumni(String department,
