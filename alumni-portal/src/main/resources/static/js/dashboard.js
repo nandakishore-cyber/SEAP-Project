@@ -40,10 +40,13 @@ document.addEventListener('DOMContentLoaded', () => {
         document.getElementById('mentorshipNav').classList.remove('hidden');
         document.getElementById('receivedMentorshipRequests').classList.remove('hidden');
         document.getElementById('eventCreationPanel').classList.remove('hidden');
+        document.getElementById('portfolioNav').classList.remove('hidden');
+        document.getElementById('storyCreationPanel').classList.remove('hidden');
         document.getElementById('directNotificationPanel').classList.remove('hidden');
         document.getElementById('mentorshipTitle').textContent = 'Student Mentorship Requests';
         document.getElementById('mentorshipSubtitle').textContent = 'Review requests from students and accept or reject them.';
     }
+    if (!isAlumni) document.getElementById('portfolioNav').classList.add('hidden');
     
     // Show admin tab if admin
     if (user.role === 'ROLE_ADMIN') {
@@ -87,6 +90,9 @@ function showSection(sectionId) {
         loadStudentsForNotifications();
     }
     if (sectionId === 'verification') loadVerifications();
+    if (sectionId === 'portfolio') loadPortfolio();
+    if (sectionId === 'stories') loadStories();
+    if (sectionId === 'reports') loadReports();
 }
 
 // --- Auth Headers Helper ---
@@ -313,6 +319,8 @@ async function loadDirectory() {
                 <h3>${a.firstName} ${a.lastName}</h3>
                 <p class="dept">${a.degree} - ${a.department} (${a.graduationYear})</p>
                 <p class="company">${a.currentDesignation || 'Alumni'} @ ${a.currentCompany || 'Not specified'}</p>
+                <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); openReportFor(${a.userId})">Report user</button>
+                <button class="btn btn-outline btn-sm" onclick="event.stopPropagation(); viewPortfolio(${a.userId})">View portfolio</button>
             `;
             grid.appendChild(card);
         });
@@ -811,6 +819,157 @@ async function markAllNotificationsRead() {
     });
     loadNotifications();
     loadNotificationCount();
+}
+
+// ==========================================
+// STLV4-14 Alumni Professional Portfolio
+// ==========================================
+async function loadPortfolio() {
+    if (!isAlumni) return;
+    try {
+        const response = await fetch(`${API_URL}/portfolio/me`, { headers: authHeaders() });
+        const result = await response.json();
+        const p = result.data || {};
+        document.getElementById('portfolioHeadline').value = p.headline || '';
+        document.getElementById('portfolioSummary').value = p.summary || '';
+        document.getElementById('portfolioExperience').value = p.experience || '';
+        document.getElementById('portfolioProjects').value = p.projects || '';
+        document.getElementById('portfolioCertifications').value = p.certifications || '';
+        document.getElementById('portfolioWebsite').value = p.websiteUrl || '';
+    } catch (error) { showAlert('portfolioMessage', 'Unable to load your portfolio.', true); }
+}
+
+document.getElementById('portfolioForm')?.addEventListener('submit', async event => {
+    event.preventDefault();
+    const payload = {
+        headline: document.getElementById('portfolioHeadline').value.trim(),
+        summary: document.getElementById('portfolioSummary').value.trim(),
+        experience: document.getElementById('portfolioExperience').value.trim(),
+        projects: document.getElementById('portfolioProjects').value.trim(),
+        certifications: document.getElementById('portfolioCertifications').value.trim(),
+        websiteUrl: document.getElementById('portfolioWebsite').value.trim()
+    };
+    try {
+        const response = await fetch(`${API_URL}/portfolio/me`, { method: 'PUT', headers: authHeaders(), body: JSON.stringify(payload) });
+        const result = await response.json();
+        showAlert('portfolioMessage', result.success ? 'Professional portfolio saved.' : result.message, !result.success);
+    } catch (error) { showAlert('portfolioMessage', 'Network error while saving your portfolio.', true); }
+});
+
+async function viewPortfolio(userId) {
+    try {
+        const response = await fetch(`${API_URL}/portfolio/${userId}`, { headers: authHeaders() });
+        const result = await response.json();
+        if (!result.success) { alert(result.message || 'This alumnus has not published a portfolio yet.'); return; }
+        const p = result.data, safe = value => escapeHtml(value || '');
+        document.getElementById('modalBody').innerHTML = `<h2>${safe(p.name)}</h2><p class="dept">${safe(p.headline)}</p>
+            <h3>About</h3><p>${safe(p.summary) || 'No summary provided.'}</p><h3>Experience</h3><p>${safe(p.experience) || 'No experience provided.'}</p>
+            <h3>Selected projects</h3><p>${safe(p.projects) || 'No projects provided.'}</p><h3>Certifications</h3><p>${safe(p.certifications) || 'None listed.'}</p>
+            ${p.websiteUrl ? `<p><a href="${safe(p.websiteUrl)}" target="_blank" rel="noopener noreferrer">View work samples</a></p>` : ''}`;
+        document.getElementById('profileModal').classList.add('show');
+    } catch (error) { alert('Unable to load this portfolio.'); }
+}
+
+// ==========================================
+// STLV4-25 Alumni Success Stories
+// ==========================================
+async function loadStories() {
+    try {
+        const [publicResponse, mineResponse, pendingResponse] = await Promise.all([
+            fetch(`${API_URL}/stories`, { headers: authHeaders() }),
+            isAlumni ? fetch(`${API_URL}/stories/me`, { headers: authHeaders() }) : Promise.resolve(null),
+            user.role === 'ROLE_ADMIN' ? fetch(`${API_URL}/stories/pending`, { headers: authHeaders() }) : Promise.resolve(null)
+        ]);
+        const publicData = await publicResponse.json();
+        const grid = document.getElementById('storyGrid');
+        grid.innerHTML = (publicData.data || []).map(story => `<article class="alumni-card glass-panel"><h3>${escapeHtml(story.title)}</h3><p class="dept">${escapeHtml(story.achievement || 'Alumni journey')} · ${escapeHtml(story.authorName)}</p><p>${escapeHtml(story.content)}</p></article>`).join('') || '<p class="muted-text">No published stories yet.</p>';
+        if (mineResponse) {
+            const mine = await mineResponse.json();
+            document.getElementById('myStories').innerHTML = `<h3 class="subsection-title">Your submissions</h3>` + ((mine.data || []).map(story => `<div class="list-item"><div class="list-item-info"><h3>${escapeHtml(story.title)}</h3><p>Status: ${escapeHtml(story.status)}</p></div><button class="btn btn-outline btn-sm" onclick="deleteStory(${story.id})">Delete</button></div>`).join('') || '<p class="muted-text">You have not submitted a story yet.</p>');
+        }
+        if (pendingResponse) {
+            const pending = await pendingResponse.json();
+            document.getElementById('pendingStories').innerHTML = `<h3 class="subsection-title">Stories awaiting review</h3>` + ((pending.data || []).map(story => `<div class="list-item"><div class="list-item-info"><h3>${escapeHtml(story.title)}</h3><p>${escapeHtml(story.authorName)} · ${escapeHtml(story.content)}</p></div><div class="list-item-actions"><button class="btn btn-primary btn-sm" onclick="moderateStory(${story.id}, 'PUBLISHED')">Publish</button><button class="btn btn-outline btn-sm" onclick="moderateStory(${story.id}, 'REJECTED')">Reject</button></div></div>`).join('') || '<p class="muted-text">No stories awaiting review.</p>');
+        }
+    } catch (error) { showAlert('storiesMessage', 'Unable to load success stories.', true); }
+}
+
+document.getElementById('storyForm')?.addEventListener('submit', async event => {
+    event.preventDefault();
+    try {
+        const response = await fetch(`${API_URL}/stories`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({
+            title: document.getElementById('storyTitle').value.trim(), achievement: document.getElementById('storyAchievement').value.trim(), content: document.getElementById('storyContent').value.trim()
+        }) });
+        const result = await response.json();
+        showAlert('storiesMessage', result.success ? 'Story submitted. It will appear after administrator review.' : result.message, !result.success);
+        if (result.success) { document.getElementById('storyForm').reset(); loadStories(); }
+    } catch (error) { showAlert('storiesMessage', 'Network error while submitting your story.', true); }
+});
+
+async function moderateStory(id, status) {
+    try {
+        const response = await fetch(`${API_URL}/stories/${id}/moderation?status=${status}`, { method: 'PUT', headers: authHeaders() });
+        const result = await response.json();
+        showAlert('storiesMessage', result.success ? `Story ${status.toLowerCase()}.` : result.message, !result.success);
+        if (result.success) loadStories();
+    } catch (error) { showAlert('storiesMessage', 'Unable to update story moderation.', true); }
+}
+
+async function deleteStory(id) {
+    if (!confirm('Delete this story?')) return;
+    try {
+        const response = await fetch(`${API_URL}/stories/${id}`, { method: 'DELETE', headers: authHeaders() });
+        const result = await response.json();
+        showAlert('storiesMessage', result.success ? 'Story deleted.' : result.message, !result.success);
+        if (result.success) loadStories();
+    } catch (error) { showAlert('storiesMessage', 'Unable to delete this story.', true); }
+}
+
+// ==========================================
+// STLV4-34 Feedback and Report User
+// ==========================================
+function openReportFor(userId) {
+    document.getElementById('reportTargetId').value = userId;
+    document.getElementById('reportCategory').value = 'HARASSMENT';
+    showSection('reports');
+    document.getElementById('reportDetails').focus();
+}
+
+document.getElementById('reportForm')?.addEventListener('submit', async event => {
+    event.preventDefault();
+    try {
+        const response = await fetch(`${API_URL}/reports`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({
+            reportedUserId: document.getElementById('reportTargetId').value ? Number(document.getElementById('reportTargetId').value) : null,
+            category: document.getElementById('reportCategory').value, details: document.getElementById('reportDetails').value.trim()
+        }) });
+        const result = await response.json();
+        showAlert('reportMessage', result.success ? 'Report submitted to the administrator.' : result.message, !result.success);
+        if (result.success) { document.getElementById('reportForm').reset(); loadReports(); }
+    } catch (error) { showAlert('reportMessage', 'Network error while submitting the report.', true); }
+});
+
+async function loadReports() {
+    try {
+        const admin = user.role === 'ROLE_ADMIN';
+        const response = await fetch(`${API_URL}/reports${admin ? '' : '/me'}`, { headers: authHeaders() });
+        const result = await response.json();
+        const items = result.data || [];
+        const html = items.map(report => `<div class="list-item"><div class="list-item-info"><h3>${escapeHtml(report.category)} · ${escapeHtml(report.status)}</h3><p>${report.reportedUserId ? `Reported user: ${escapeHtml(report.reportedUserName)} (${report.reportedUserId})` : 'General feedback'}</p><p>${escapeHtml(report.details)}</p></div>${admin ? `<select aria-label="Update report status" onchange="updateReportStatus(${report.id}, this.value)"><option value="OPEN" ${report.status === 'OPEN' ? 'selected' : ''}>Open</option><option value="REVIEWING" ${report.status === 'REVIEWING' ? 'selected' : ''}>Reviewing</option><option value="RESOLVED" ${report.status === 'RESOLVED' ? 'selected' : ''}>Resolved</option><option value="DISMISSED" ${report.status === 'DISMISSED' ? 'selected' : ''}>Dismissed</option></select>` : ''}</div>`).join('');
+        document.getElementById(admin ? 'adminReports' : 'myReports').innerHTML = `<h3 class="subsection-title">${admin ? 'Submitted reports' : 'Your submitted reports'}</h3>${html || '<p class="muted-text">No reports submitted yet.</p>'}`;
+    } catch (error) { showAlert('reportMessage', 'Unable to load reports.', true); }
+}
+
+async function updateReportStatus(id, status) {
+    try {
+        const response = await fetch(`${API_URL}/reports/${id}/status?status=${status}`, { method: 'PUT', headers: authHeaders() });
+        const result = await response.json();
+        showAlert('reportMessage', result.success ? 'Report status updated.' : result.message, !result.success);
+        if (result.success) loadReports();
+    } catch (error) { showAlert('reportMessage', 'Unable to update report status.', true); }
+}
+
+function escapeHtml(value) {
+    return String(value).replace(/[&<>"']/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]);
 }
 
 setInterval(loadNotificationCount, 30000);
