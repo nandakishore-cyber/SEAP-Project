@@ -8,14 +8,33 @@ if (localStorage.getItem('token')) {
 function switchTab(tab) {
     document.querySelectorAll('.tab-btn').forEach(button => {
         button.classList.toggle('active', button.dataset.tab === tab);
+        if (button.hasAttribute('role')) button.setAttribute('aria-selected', String(button.dataset.tab === tab));
     });
     document.querySelectorAll('.auth-form').forEach(form => {
         form.classList.toggle('active', form.id === `${tab}Form`);
     });
+    const isLogin = tab === 'login';
+    const roleName = document.body.dataset.roleLabel || 'AlumniConnect';
+    const title = document.getElementById('authTitle');
+    if (title) title.textContent = isLogin ? `Welcome back to your ${roleName.toLowerCase()} space` : `Create your ${roleName.toLowerCase()} account`;
+    const subtitle = document.querySelector('.auth-header p');
+    if (subtitle) subtitle.textContent = isLogin
+        ? 'Sign in to pick up where you left off, or create a free account.'
+        : 'A few details will help us set up your community profile.';
 }
 
-document.querySelectorAll('.tab-btn').forEach(button => {
+document.querySelectorAll('[data-tab]').forEach(button => {
     button.addEventListener('click', () => switchTab(button.dataset.tab));
+});
+
+document.querySelectorAll('[data-toggle-password]').forEach(button => {
+    button.addEventListener('click', () => {
+        const input = document.getElementById(button.dataset.togglePassword);
+        const isVisible = input.type === 'text';
+        input.type = isVisible ? 'password' : 'text';
+        button.textContent = isVisible ? 'Show' : 'Hide';
+        button.setAttribute('aria-label', `${isVisible ? 'Show' : 'Hide'} password`);
+    });
 });
 
 function setLoading(form, loading) {
@@ -44,6 +63,7 @@ function showValidationError(errorDiv, data, fallback) {
 async function authenticate(url, payload, form, errorDiv, fallback, redirect = true) {
     setLoading(form, true);
     errorDiv.textContent = '';
+    errorDiv.className = 'error-msg';
 
     try {
         const response = await fetch(`${API_URL}${url}`, {
@@ -122,6 +142,8 @@ async function uploadBonafideCertificate(token) {
     const fileInput = document.getElementById('regBonafide');
     const file = fileInput && fileInput.files[0];
     if (!file) throw new Error('A bonafide certificate is required for alumni registration.');
+    if (file.size > 5 * 1024 * 1024) throw new Error('The certificate must be 5 MB or smaller.');
+    if (!/\.(pdf|jpe?g|png)$/i.test(file.name)) throw new Error('Choose a PDF, JPG, or PNG certificate.');
     const formData = new FormData();
     formData.append('file', file);
     const response = await fetch(`${API_URL}/alumni/me/bonafide`, {
@@ -157,6 +179,14 @@ document.getElementById('registerForm').addEventListener('submit', event => {
     const email = document.getElementById('regEmail').value.trim();
     const form = event.target;
     const errorDiv = document.getElementById('regError');
+    errorDiv.textContent = '';
+    errorDiv.className = 'error-msg';
+    if (pageRole === 'ROLE_ALUMNI') {
+        const certificate = document.getElementById('regBonafide').files[0];
+        if (!certificate) { errorDiv.textContent = 'Select your bonafide certificate to continue.'; return; }
+        if (certificate.size > 5 * 1024 * 1024) { errorDiv.textContent = 'The certificate must be 5 MB or smaller.'; return; }
+        if (!/\.(pdf|jpe?g|png)$/i.test(certificate.name)) { errorDiv.textContent = 'Choose a PDF, JPG, or PNG certificate.'; return; }
+    }
     authenticate('/auth/register', {
         firstName: document.getElementById('regFirstName').value.trim(),
         lastName: document.getElementById('regLastName').value.trim(),
@@ -176,3 +206,14 @@ document.getElementById('registerForm').addEventListener('submit', event => {
         }
     });
 });
+
+const certificateInput = document.getElementById('regBonafide');
+if (certificateInput) {
+    certificateInput.addEventListener('change', () => {
+        const helper = document.getElementById('certificateFileName');
+        const file = certificateInput.files[0];
+        if (!file) { helper.textContent = 'PDF, JPG, or PNG · max 5 MB'; return; }
+        helper.textContent = `${file.name} · ${(file.size / (1024 * 1024)).toFixed(2)} MB`;
+        helper.classList.toggle('file-error', file.size > 5 * 1024 * 1024 || !/\.(pdf|jpe?g|png)$/i.test(file.name));
+    });
+}

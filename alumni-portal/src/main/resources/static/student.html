@@ -3,53 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student Login | AlumniConnect</title>
+    <meta name="description" content="Join AlumniConnect as a student. Find alumni mentors, attend events, and build your career network.">
+    <meta name="theme-color" content="#091514">
+    <title>Student space | AlumniConnect</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body class="auth-page" data-role="ROLE_STUDENT" data-role-label="Student">
-    <div class="background-animation"><div class="blob blob-1"></div><div class="blob blob-2 blob-alt"></div></div>
-    <nav class="navbar"><div class="container nav-container">
+    <div class="background-animation" aria-hidden="true"><div class="blob blob-1"></div><div class="blob blob-2 blob-alt"></div></div>
+    <nav class="navbar auth-navbar"><div class="container nav-container">
         <a class="logo" href="index.html">Alumni<span>Connect</span></a>
-        <a class="btn btn-outline btn-sm" href="index.html">Change account type</a>
+        <div class="auth-nav-actions"><span class="role-indicator"><span class="online-dot"></span> Student community</span><a class="btn btn-outline btn-sm" href="alumni.html">Alumni sign in</a></div>
     </div></nav>
-    <main class="container auth-container">
-        <div class="auth-card glass-panel">
-            <div class="auth-header"><h2><span class="role-name">Student</span> portal</h2><p>Sign in or create your AlumniConnect account.</p></div>
-            <div class="auth-tabs">
-                <button class="tab-btn active" type="button" data-tab="login">Login</button>
-                <button class="tab-btn" type="button" data-tab="register">Create account</button>
+
+    <main class="container auth-container role-auth-layout">
+        <section class="auth-story" aria-labelledby="studentHeadline">
+            <div class="auth-eyebrow"><span class="eyebrow-mark">S</span> YOUR NEXT CHAPTER STARTS HERE</div>
+            <h1 id="studentHeadline">Your college network, <span>one good connection away.</span></h1>
+            <p class="auth-lead">Meet alumni who have been where you are. Ask questions, explore career paths, and turn advice into your next opportunity.</p>
+            <div class="auth-benefits">
+                <article class="benefit-card"><span class="benefit-icon">↗</span><div><h2>Find your people</h2><p>Search verified alumni by role, company, or department.</p></div></article>
+                <article class="benefit-card"><span class="benefit-icon">◎</span><div><h2>Get practical guidance</h2><p>Request mentorship and keep every conversation in one place.</p></div></article>
+                <article class="benefit-card"><span class="benefit-icon">▦</span><div><h2>Show up and learn</h2><p>Discover alumni events, workshops, and community stories.</p></div></article>
             </div>
-            <form id="loginForm" class="auth-form active">
-                <div class="form-group"><label for="loginEmail">Email Address</label><input type="email" id="loginEmail" required autocomplete="email" placeholder="you@college.edu"></div>
-                <div class="form-group"><label for="loginPassword">Password</label><input type="password" id="loginPassword" required autocomplete="current-password" placeholder="••••••••"></div>
-                <div id="loginError" class="error-msg" role="alert"></div>
-                <button type="submit" class="btn btn-primary btn-block"><span>Sign In</span><div class="loader hidden"></div></button>
+            <div class="product-preview student-preview" aria-label="Preview of the student dashboard">
+                <div class="preview-topbar"><div class="preview-dots"><i></i><i></i><i></i></div><span>STUDENT DASHBOARD</span><b>● SAMPLE</b></div>
+                <div class="preview-body">
+                    <div class="preview-welcome"><div><small>YOUR COMMUNITY</small><h2>Good things grow together.</h2></div><div class="preview-avatar">AK</div></div>
+                    <div class="preview-stats"><div><small>MENTORS FOUND</small><strong>24</strong><span>in your field</span></div><div><small>UPCOMING EVENTS</small><strong>03</strong><span>this month</span></div></div>
+                    <div class="preview-mentor"><div class="mentor-avatar">MP</div><div class="mentor-copy"><strong>Meera Patel</strong><span>Product Designer · Class of 2019</span></div><span class="match-badge">92% match</span></div>
+                    <div class="preview-progress"><div><span>Profile strength</span><strong>Getting started</strong></div><div class="progress-track"><span></span></div></div>
+                </div>
+            </div>
+            <p class="auth-note"><span>✦</span> A stronger network begins with a complete student profile.</p>
+        </section>
+
+        <section class="auth-card glass-panel" aria-labelledby="authTitle">
+            <div class="auth-header"><div class="auth-card-kicker">STUDENT ACCESS</div><h2 id="authTitle">Welcome to your space</h2><p>Sign in to pick up where you left off, or create a free account.</p></div>
+            <div class="auth-tabs" role="tablist" aria-label="Choose sign in or account creation">
+                <button class="tab-btn active" type="button" data-tab="login" role="tab" aria-selected="true">Sign in</button>
+                <button class="tab-btn" type="button" data-tab="register" role="tab" aria-selected="false">Create account</button>
+            </div>
+            <form id="loginForm" class="auth-form active" aria-label="Student sign in">
+                <div class="form-group"><label for="loginEmail">College or personal email</label><input type="email" id="loginEmail" required autocomplete="email" placeholder="you@college.edu"></div>
+                <div class="form-group"><div class="label-row"><label for="loginPassword">Password</label><a href="#loginHelp" class="text-link">Need help?</a></div><div class="password-field"><input type="password" id="loginPassword" required autocomplete="current-password" placeholder="Enter your password"><button type="button" class="password-toggle" data-toggle-password="loginPassword" aria-label="Show password">Show</button></div></div>
+                <div id="loginError" class="error-msg" role="alert" aria-live="polite"></div>
+                <button type="submit" class="btn btn-primary btn-block auth-submit"><span>Sign in to student space</span><div class="loader hidden"></div></button>
+                <p class="auth-switch-copy">New to AlumniConnect? <button type="button" class="text-link" data-tab="register">Create your account</button></p>
             </form>
-            <form id="registerForm" class="auth-form">
+            <form id="registerForm" class="auth-form" aria-label="Create a student account">
+                <div class="form-intro"><span class="step-chip">01</span><span>Tell us a little about yourself</span></div>
                 <div class="form-row">
-                    <div class="form-group"><label for="regFirstName">First Name</label><input type="text" id="regFirstName" required autocomplete="given-name" placeholder="John"></div>
-                    <div class="form-group"><label for="regLastName">Last Name</label><input type="text" id="regLastName" required autocomplete="family-name" placeholder="Doe"></div>
+                    <div class="form-group"><label for="regFirstName">First name</label><input type="text" id="regFirstName" required minlength="2" maxlength="50" autocomplete="given-name" placeholder="Aarav"></div>
+                    <div class="form-group"><label for="regLastName">Last name</label><input type="text" id="regLastName" required minlength="2" maxlength="50" autocomplete="family-name" placeholder="Kumar"></div>
                 </div>
-                <div class="form-group"><label for="regEmail">Email Address</label><input type="email" id="regEmail" required autocomplete="email" placeholder="you@college.edu"></div>
-                <div class="form-group"><label for="regPassword">Password</label><input type="password" id="regPassword" required minlength="8" autocomplete="new-password" placeholder="••••••••"></div>
+                <div class="form-group"><label for="regEmail">Email address</label><input type="email" id="regEmail" required autocomplete="email" placeholder="you@college.edu"></div>
+                <div class="form-group"><label for="regPassword">Create password</label><div class="password-field"><input type="password" id="regPassword" required minlength="8" maxlength="100" autocomplete="new-password" placeholder="At least 8 characters"><button type="button" class="password-toggle" data-toggle-password="regPassword" aria-label="Show password">Show</button></div><small class="field-hint">Use at least 8 characters.</small></div>
+                <div class="form-intro"><span class="step-chip">02</span><span>Set up your student profile</span></div>
                 <div class="form-row">
-                    <div class="form-group"><label for="regStudentId">Student ID</label><input id="regStudentId" required placeholder="STU-2026-001"></div>
-                    <div class="form-group"><label for="regProgram">Program / Degree</label><input id="regProgram" required placeholder="B.Tech Computer Science"></div>
+                    <div class="form-group"><label for="regStudentId">Student ID</label><input id="regStudentId" required maxlength="50" placeholder="STU-2026-001"></div>
+                    <div class="form-group"><label for="regProgram">Program / degree</label><input id="regProgram" required maxlength="100" placeholder="B.Tech Computer Science"></div>
                 </div>
                 <div class="form-row">
-                    <div class="form-group"><label for="regDepartment">Department</label><input id="regDepartment" required placeholder="Computer Science"></div>
-                    <div class="form-group"><label for="regGraduationYear">Expected Graduation Year</label><input id="regGraduationYear" type="number" min="2000" max="2100" required placeholder="2027"></div>
+                    <div class="form-group"><label for="regDepartment">Department</label><input id="regDepartment" required maxlength="100" placeholder="Computer Science"></div>
+                    <div class="form-group"><label for="regGraduationYear">Expected graduation</label><input id="regGraduationYear" type="number" min="2000" max="2100" required placeholder="2027"></div>
                 </div>
-                <div class="form-group"><label for="regInterests">Career Interests</label><textarea id="regInterests" rows="2" required placeholder="Software engineering, research..."></textarea></div>
-                <div class="form-group"><label for="regSkills">Skills You Are Building</label><input id="regSkills" required placeholder="Java, Python, communication"></div>
-                <div id="regError" class="error-msg" role="alert"></div>
-                <button type="submit" class="btn btn-primary btn-block"><span>Create Account</span><div class="loader hidden"></div></button>
+                <div class="form-group"><label for="regInterests">Career interests</label><textarea id="regInterests" rows="2" maxlength="1000" required placeholder="What are you curious about? e.g. software, product, research"></textarea></div>
+                <div class="form-group"><label for="regSkills">Skills you are building</label><input id="regSkills" required maxlength="500" placeholder="Java, Python, communication"></div>
+                <div id="regError" class="error-msg" role="alert" aria-live="polite"></div>
+                <button type="submit" class="btn btn-primary btn-block auth-submit"><span>Create student account</span><div class="loader hidden"></div></button>
+                <p class="terms-note">By creating an account, you agree to use the community respectfully.</p>
             </form>
-        </div>
-        <div class="hero-text"><h2>Learn, connect, and <span>grow together.</span></h2><p>Find mentors, discover opportunities, and stay connected with the people shaping your college community.</p></div>
+            <div id="loginHelp" class="auth-help"><span>Having trouble?</span> Contact your college community administrator for account help.</div>
+        </section>
     </main>
+    <footer class="auth-footer container"><span>© AlumniConnect</span><span>Built for the people who help you grow.</span><a href="index.html">Choose another account type</a></footer>
     <script src="js/app.js"></script>
 </body>
 </html>
