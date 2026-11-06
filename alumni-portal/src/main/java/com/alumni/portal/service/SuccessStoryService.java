@@ -23,6 +23,16 @@ public class SuccessStoryService {
         SuccessStory story=SuccessStory.builder().author(author).title(request.getTitle().trim()).content(request.getContent().trim()).achievement(request.getAchievement()).status("PENDING").build();
         return map(stories.save(story));
     }
+    @Transactional public SuccessStoryResponse update(Long userId, Long storyId, SuccessStoryRequest request) {
+        SuccessStory story=stories.findById(storyId)
+                .orElseThrow(() -> new ResourceNotFoundException("SuccessStory", "id", storyId));
+        if (!story.getAuthor().getId().equals(userId) || !"PENDING".equals(story.getStatus()))
+            throw new ResourceNotFoundException("SuccessStory", "id", storyId);
+        story.setTitle(request.getTitle().trim());
+        story.setContent(request.getContent().trim());
+        story.setAchievement(request.getAchievement());
+        return map(stories.save(story));
+    }
     @Transactional public SuccessStoryResponse moderate(Long id, String status) {
         if (!List.of("PUBLISHED", "REJECTED").contains(status)) throw new IllegalArgumentException("Status must be PUBLISHED or REJECTED");
         SuccessStory story=stories.findById(id).orElseThrow(() -> new ResourceNotFoundException("SuccessStory", "id", id));

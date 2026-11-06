@@ -6,4 +6,5 @@
   reporter's history with `OPEN` status.
 - Confirm reporting one's own account is rejected.
 - Confirm an administrator can list reports and update status.
+- Confirm administrator report rows identify who submitted the feedback.
 - Confirm a non-administrator cannot list all reports or change their status.

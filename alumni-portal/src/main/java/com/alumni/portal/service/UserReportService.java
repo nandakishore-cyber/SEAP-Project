@@ -37,7 +37,9 @@ public class UserReportService {
     private User user(Long id) { return users.findById(id).orElseThrow(() -> new ResourceNotFoundException("User", "id", id)); }
     private UserReportResponse map(UserReport r) {
         User target = r.getReportedUser();
-        return new UserReportResponse(r.getId(), target == null ? null : target.getId(),
+        User reporter = r.getReporter();
+        return new UserReportResponse(r.getId(), reporter.getId(), reporter.getFirstName()+" "+reporter.getLastName(),
+                target == null ? null : target.getId(),
                 target == null ? null : target.getFirstName()+" "+target.getLastName(), r.getCategory(),
                 r.getDetails(), r.getStatus(), r.getCreatedAt());
     }

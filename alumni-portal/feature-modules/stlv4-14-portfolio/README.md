@@ -5,8 +5,10 @@ projects, certifications, and a website link. They can save and update their
 portfolio from the dashboard. Other signed-in users can open an alumni
 portfolio from the directory.
 
-The dashboard is integrated at `src/main/resources/static/dashboard.html` and
-`src/main/resources/static/js/dashboard.js`. The API provides `GET
+The dashboard integration is at `src/main/resources/static/dashboard.html`
+and `src/main/resources/static/js/dashboard.js`; the feature's client code is
+also included in `frontend/portfolio.js`. Alumni can preview the completed
+portfolio before saving. The API provides `GET
 /api/portfolio/me`, `PUT /api/portfolio/me`, and `GET /api/portfolio/{userId}`.
 
 ## Implementation

@@ -2,6 +2,7 @@
 const token = localStorage.getItem('token');
 const user = JSON.parse(localStorage.getItem('user') || '{}');
 let currentAlumniProfileId = null;
+var storyCacheById = {};
 const isStudent = user.role === 'ROLE_STUDENT';
 const isAlumni = user.role === 'ROLE_ALUMNI';
 
@@ -870,6 +871,22 @@ async function viewPortfolio(userId) {
     } catch (error) { alert('Unable to load this portfolio.'); }
 }
 
+function previewPortfolio() {
+    const value = id => document.getElementById(id).value.trim();
+    const safe = value => escapeHtml(value || '');
+    const website = value('portfolioWebsite');
+    if (website && !/^https?:\/\//i.test(website)) {
+        showAlert('portfolioMessage', 'Use a valid http or https link before previewing.', true);
+        return;
+    }
+    document.getElementById('modalBody').innerHTML = `<h2>${escapeHtml(`${user.firstName || ''} ${user.lastName || ''}`.trim())}</h2>
+        <p class="dept">${safe(value('portfolioHeadline'))}</p><h3>About</h3><p>${safe(value('portfolioSummary')) || 'No summary provided.'}</p>
+        <h3>Experience</h3><p>${safe(value('portfolioExperience')) || 'No experience provided.'}</p><h3>Selected projects</h3>
+        <p>${safe(value('portfolioProjects')) || 'No projects provided.'}</p><h3>Certifications</h3>
+        <p>${safe(value('portfolioCertifications')) || 'None listed.'}</p>${website ? `<p><a href="${safe(website)}" target="_blank" rel="noopener noreferrer">View work samples</a></p>` : ''}`;
+    document.getElementById('profileModal').classList.add('show');
+}
+
 // ==========================================
 // STLV4-25 Alumni Success Stories
 // ==========================================
@@ -885,7 +902,9 @@ async function loadStories() {
         grid.innerHTML = (publicData.data || []).map(story => `<article class="alumni-card glass-panel"><h3>${escapeHtml(story.title)}</h3><p class="dept">${escapeHtml(story.achievement || 'Alumni journey')} · ${escapeHtml(story.authorName)}</p><p>${escapeHtml(story.content)}</p></article>`).join('') || '<p class="muted-text">No published stories yet.</p>';
         if (mineResponse) {
             const mine = await mineResponse.json();
-            document.getElementById('myStories').innerHTML = `<h3 class="subsection-title">Your submissions</h3>` + ((mine.data || []).map(story => `<div class="list-item"><div class="list-item-info"><h3>${escapeHtml(story.title)}</h3><p>Status: ${escapeHtml(story.status)}</p></div><button class="btn btn-outline btn-sm" onclick="deleteStory(${story.id})">Delete</button></div>`).join('') || '<p class="muted-text">You have not submitted a story yet.</p>');
+            const myStories = mine.data || [];
+            storyCacheById = Object.fromEntries(myStories.map(story => [story.id, story]));
+            document.getElementById('myStories').innerHTML = `<h3 class="subsection-title">Your submissions</h3>` + (myStories.map(story => `<div class="list-item"><div class="list-item-info"><h3>${escapeHtml(story.title)}</h3><p>Status: ${escapeHtml(story.status)}</p></div><div class="list-item-actions">${story.status === 'PENDING' ? `<button class="btn btn-outline btn-sm" onclick="editStory(${story.id})">Edit</button>` : ''}<button class="btn btn-outline btn-sm" onclick="deleteStory(${story.id})">Delete</button></div></div>`).join('') || '<p class="muted-text">You have not submitted a story yet.</p>');
         }
         if (pendingResponse) {
             const pending = await pendingResponse.json();
@@ -897,14 +916,36 @@ async function loadStories() {
 document.getElementById('storyForm')?.addEventListener('submit', async event => {
     event.preventDefault();
     try {
-        const response = await fetch(`${API_URL}/stories`, { method: 'POST', headers: authHeaders(), body: JSON.stringify({
+        const storyId = document.getElementById('editingStoryId').value;
+        const response = await fetch(`${API_URL}/stories${storyId ? `/${storyId}` : ''}`, { method: storyId ? 'PUT' : 'POST', headers: authHeaders(), body: JSON.stringify({
             title: document.getElementById('storyTitle').value.trim(), achievement: document.getElementById('storyAchievement').value.trim(), content: document.getElementById('storyContent').value.trim()
         }) });
         const result = await response.json();
-        showAlert('storiesMessage', result.success ? 'Story submitted. It will appear after administrator review.' : result.message, !result.success);
-        if (result.success) { document.getElementById('storyForm').reset(); loadStories(); }
+        showAlert('storiesMessage', result.success ? (storyId ? 'Story updated and returned for review.' : 'Story submitted. It will appear after administrator review.') : result.message, !result.success);
+        if (result.success) { cancelStoryEdit(); loadStories(); }
     } catch (error) { showAlert('storiesMessage', 'Network error while submitting your story.', true); }
 });
+
+function editStory(id) {
+    const story = storyCacheById[id];
+    if (!story || story.status !== 'PENDING') return;
+    document.getElementById('editingStoryId').value = id;
+    document.getElementById('storyTitle').value = story.title;
+    document.getElementById('storyAchievement').value = story.achievement || '';
+    document.getElementById('storyContent').value = story.content;
+    document.getElementById('storyFormHeading').textContent = 'Edit pending story';
+    document.getElementById('storySubmitButton').textContent = 'Save and resubmit';
+    document.getElementById('cancelStoryEdit').classList.remove('hidden');
+    document.getElementById('storyForm').scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function cancelStoryEdit() {
+    document.getElementById('storyForm').reset();
+    document.getElementById('editingStoryId').value = '';
+    document.getElementById('storyFormHeading').textContent = 'Share your story';
+    document.getElementById('storySubmitButton').textContent = 'Submit for review';
+    document.getElementById('cancelStoryEdit').classList.add('hidden');
+}
 
 async function moderateStory(id, status) {
     try {
@@ -954,7 +995,7 @@ async function loadReports() {
         const response = await fetch(`${API_URL}/reports${admin ? '' : '/me'}`, { headers: authHeaders() });
         const result = await response.json();
         const items = result.data || [];
-        const html = items.map(report => `<div class="list-item"><div class="list-item-info"><h3>${escapeHtml(report.category)} · ${escapeHtml(report.status)}</h3><p>${report.reportedUserId ? `Reported user: ${escapeHtml(report.reportedUserName)} (${report.reportedUserId})` : 'General feedback'}</p><p>${escapeHtml(report.details)}</p></div>${admin ? `<select aria-label="Update report status" onchange="updateReportStatus(${report.id}, this.value)"><option value="OPEN" ${report.status === 'OPEN' ? 'selected' : ''}>Open</option><option value="REVIEWING" ${report.status === 'REVIEWING' ? 'selected' : ''}>Reviewing</option><option value="RESOLVED" ${report.status === 'RESOLVED' ? 'selected' : ''}>Resolved</option><option value="DISMISSED" ${report.status === 'DISMISSED' ? 'selected' : ''}>Dismissed</option></select>` : ''}</div>`).join('');
+        const html = items.map(report => `<div class="list-item"><div class="list-item-info"><h3>${escapeHtml(report.category)} · ${escapeHtml(report.status)}</h3>${admin ? `<p>Submitted by: ${escapeHtml(report.reporterName)} (${report.reporterId})</p>` : ''}<p>${report.reportedUserId ? `Reported user: ${escapeHtml(report.reportedUserName)} (${report.reportedUserId})` : 'General feedback'}</p><p>${escapeHtml(report.details)}</p></div>${admin ? `<select aria-label="Update report status" onchange="updateReportStatus(${report.id}, this.value)"><option value="OPEN" ${report.status === 'OPEN' ? 'selected' : ''}>Open</option><option value="REVIEWING" ${report.status === 'REVIEWING' ? 'selected' : ''}>Reviewing</option><option value="RESOLVED" ${report.status === 'RESOLVED' ? 'selected' : ''}>Resolved</option><option value="DISMISSED" ${report.status === 'DISMISSED' ? 'selected' : ''}>Dismissed</option></select>` : ''}</div>`).join('');
         document.getElementById(admin ? 'adminReports' : 'myReports').innerHTML = `<h3 class="subsection-title">${admin ? 'Submitted reports' : 'Your submitted reports'}</h3>${html || '<p class="muted-text">No reports submitted yet.</p>'}`;
     } catch (error) { showAlert('reportMessage', 'Unable to load reports.', true); }
 }

@@ -327,17 +327,18 @@
                     <div class="form-group"><label for="portfolioProjects">Selected projects</label><textarea id="portfolioProjects" rows="4" maxlength="3000"></textarea></div>
                     <div class="form-row"><div class="form-group"><label for="portfolioCertifications">Certifications</label><textarea id="portfolioCertifications" rows="3" maxlength="2000"></textarea></div><div class="form-group"><label for="portfolioWebsite">Website or work samples</label><input id="portfolioWebsite" type="url" maxlength="500" placeholder="https://"></div></div>
                     <button class="btn btn-primary" type="submit">Save Portfolio</button>
+                    <button class="btn btn-outline" type="button" onclick="previewPortfolio()">Preview</button>
                 </form>
             </section>
 
             <section id="section-stories" class="dashboard-section glass-panel hidden">
                 <div class="section-header"><div><h2>Alumni Success Stories</h2><p>Learn from alumni journeys and share a milestone that could inspire others.</p></div></div>
                 <div id="storiesMessage" class="alert hidden"></div>
-                <div id="storyCreationPanel" class="modal-inline hidden"><h3>Share your story</h3><form id="storyForm" class="dashboard-form">
+                <div id="storyCreationPanel" class="modal-inline hidden"><h3 id="storyFormHeading">Share your story</h3><form id="storyForm" class="dashboard-form"><input id="editingStoryId" type="hidden">
                     <div class="form-group"><label for="storyTitle">Title</label><input id="storyTitle" maxlength="180" required></div>
                     <div class="form-group"><label for="storyAchievement">Achievement</label><input id="storyAchievement" maxlength="120" placeholder="e.g. Founded a nonprofit"></div>
                     <div class="form-group"><label for="storyContent">Your journey</label><textarea id="storyContent" rows="5" maxlength="3000" required></textarea></div>
-                    <button class="btn btn-primary" type="submit">Submit for review</button>
+                    <button id="storySubmitButton" class="btn btn-primary" type="submit">Submit for review</button><button id="cancelStoryEdit" class="btn btn-outline hidden" type="button" onclick="cancelStoryEdit()">Cancel edit</button>
                 </form><div id="myStories" class="list-container"></div></div>
                 <div id="storyGrid" class="grid-container"></div>
                 <div id="pendingStories" class="list-container"></div>
